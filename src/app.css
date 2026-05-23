@@ -1,0 +1,73 @@
+/*
+ * Global styles. Mobile-first. Light + dark via prefers-color-scheme.
+ * Slice 1 keeps this lean — visual brand polish lands in a later slice.
+ */
+
+:root {
+  --font-system:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-bg: #fafaf8;
+  --color-surface: #ffffff;
+  --color-border: #e0dcd4;
+  --color-text: #1a1a1a;
+  --color-text-muted: #666;
+  --color-accent: #b8651b;
+  --color-accent-bg: #fbece0;
+  --color-highlight-bg: #fff3a3;
+
+  --radius: 8px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  font-family: var(--font-system);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.4;
+
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #161513;
+    --color-surface: #1f1e1c;
+    --color-border: #34322f;
+    --color-text: #f0ece4;
+    --color-text-muted: #999;
+    --color-accent: #e8a25e;
+    --color-accent-bg: #3a2b1b;
+    --color-highlight-bg: #6a5a1a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+input {
+  font: inherit;
+  color: inherit;
+}
+
+mark {
+  background: var(--color-highlight-bg);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
