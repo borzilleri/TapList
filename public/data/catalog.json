@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "datasets": [
+    {
+      "id": "taplist-mock-2026",
+      "name": "TapList Mock Festival 2026",
+      "url": "/data/taplist-mock-2026.json",
+      "dates": { "start": "2026-06-12", "end": "2026-06-14" },
+      "location": "Marymoor Park, Redmond WA",
+      "status": "upcoming",
+      "default": true
+    }
+  ]
+}
