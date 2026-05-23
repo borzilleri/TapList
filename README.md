@@ -17,8 +17,8 @@ TapList is an installable, offline-first web app for navigating a beer festival 
 
 ### Prerequisites
 
-- Node.js 18.18+ (20.x LTS recommended)
-- npm 9+
+- Node.js — version pinned in [`.nvmrc`](.nvmrc). Run `nvm install && nvm use` to match.
+- npm (ships with Node)
 
 ### Setup
 

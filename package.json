@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "The unofficial guide for the Washington Brewers Festival — a mobile-first, offline-capable PWA.",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
     "build": "svelte-check --tsconfig ./tsconfig.json && vite build",
