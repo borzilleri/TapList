@@ -48,11 +48,15 @@ The primary screen is the list of beers.
 
 User can sort by:
 
-- Name (A–Z)
-- Brewery (A–Z), then beer name (A–Z) within a brewery — **default on first load**
-- ABV (low → high)
+- **Name** (alphabetical)
+- **Brewery** (alphabetical), then beer name within a brewery — **default on first load**
+- **ABV** (numeric)
 
-Beers missing the sort field (e.g., ABV is optional and may be absent) sort to the end of the list regardless of sort direction, so the user always sees the populated beers first.
+Each sort key has an independent **direction** the user can toggle: ascending (A→Z, low→high) or descending (Z→A, high→low). Ascending is the default. The direction control is a separate affordance next to the sort-key selector — toggling direction never changes the sort key, and changing the sort key resets the direction back to ascending.
+
+When the sort key is brewery and the direction is descending, both the primary (brewery) and secondary (beer name within brewery) comparisons reverse together — i.e. Z→A breweries with Z→A names inside each brewery. This matches conventional spreadsheet behavior.
+
+**Missing-field rows always sort to the end of the list, regardless of direction.** ABV is the only sortable field that can be absent on a beer (name and brewery are required), so beers without an ABV cluster at the bottom whether you sort low→high or high→low. The user always sees the populated rows first.
 
 ### Search
 

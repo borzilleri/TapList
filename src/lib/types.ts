@@ -50,10 +50,12 @@ export interface Dataset {
 // --- View model: sort/filter/search state for the list view ---
 
 export type SortKey = 'brewery' | 'name' | 'abv';
+export type SortDirection = 'asc' | 'desc';
 export type FilterMode = 'all' | 'toTry' | 'tried' | 'notTried';
 
 export interface ListViewState {
   sort: SortKey;
+  sortDirection: SortDirection;
   filter: FilterMode;
   search: string;
 }

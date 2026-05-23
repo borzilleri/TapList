@@ -6,7 +6,7 @@
  * in any order without surprise interactions.
  */
 
-import type { Beer, FilterMode, SortKey } from './types';
+import type { Beer, FilterMode, SortDirection, SortKey } from './types';
 
 const SNIPPET_CONTEXT_CHARS = 40;
 const MAX_SNIPPET_LEN = 120;
@@ -30,10 +30,11 @@ export function buildRows(
   search: string,
   filter: FilterMode,
   sort: SortKey,
+  direction: SortDirection = 'asc',
 ): BeerRowVM[] {
   const q = search.trim().toLowerCase();
   const filtered = beers.filter((b) => matchesSearch(b, q) && matchesFilter(b, filter));
-  const sorted = [...filtered].sort(comparator(sort));
+  const sorted = [...filtered].sort(comparator(sort, direction));
   return sorted.map((beer) => buildVm(beer, q));
 }
 
@@ -79,26 +80,30 @@ function matchesFilter(_beer: Beer, mode: FilterMode): boolean {
 
 /**
  * Comparator builder. Missing-field rows always sort to the END, regardless
- * of sort direction, so the populated rows are visible first (spec).
+ * of sort direction, so the populated rows are visible first (spec). Direction
+ * only flips the ordering among rows that HAVE the sort field.
  */
-function comparator(sort: SortKey): (a: Beer, b: Beer) => number {
+function comparator(sort: SortKey, direction: SortDirection): (a: Beer, b: Beer) => number {
+  const mul = direction === 'desc' ? -1 : 1;
   if (sort === 'name') {
-    return (a, b) => a.name.localeCompare(b.name);
+    return (a, b) => mul * a.name.localeCompare(b.name);
   }
   if (sort === 'abv') {
     return (a, b) => {
-      // Both missing -> stable. One missing -> missing goes last.
+      // Missing ABV always goes last, regardless of direction.
       if (a.abv === null && b.abv === null) return 0;
       if (a.abv === null) return 1;
       if (b.abv === null) return -1;
-      return a.abv - b.abv;
+      return mul * (a.abv - b.abv);
     };
   }
   // 'brewery' — default. Then beer name within a brewery.
+  // Both primary and secondary keys reverse together when direction is desc,
+  // matching conventional spreadsheet behavior on multi-column sorts.
   return (a, b) => {
     const byBrewery = a.brewery.localeCompare(b.brewery);
-    if (byBrewery !== 0) return byBrewery;
-    return a.name.localeCompare(b.name);
+    if (byBrewery !== 0) return mul * byBrewery;
+    return mul * a.name.localeCompare(b.name);
   };
 }
 

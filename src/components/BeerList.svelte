@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Beer, FilterMode, SortKey } from '../lib/types';
+  import type { Beer, FilterMode, SortDirection, SortKey } from '../lib/types';
   import { buildRows } from '../lib/list';
   import BeerRow from './BeerRow.svelte';
 
@@ -12,9 +12,34 @@
 
   let search = $state('');
   let sort = $state<SortKey>('brewery');
+  let sortDirection = $state<SortDirection>('asc');
   let filter = $state<FilterMode>('all');
 
-  const rows = $derived(buildRows(beers, search, filter, sort));
+  const rows = $derived(buildRows(beers, search, filter, sort, sortDirection));
+
+  // Reset direction to ascending whenever the user picks a different sort key.
+  // This matches the conventional spreadsheet pattern and avoids stale "desc"
+  // states bleeding across keys.
+  function selectSort(next: SortKey) {
+    if (sort !== next) {
+      sort = next;
+      sortDirection = 'asc';
+    }
+  }
+
+  function toggleDirection() {
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+  }
+
+  // Per-key labels for the direction button, so the tooltip describes what
+  // the button will do — clearer than a generic "Reverse sort".
+  const directionLabel = $derived.by(() => {
+    const next = sortDirection === 'asc' ? 'descending' : 'ascending';
+    if (sort === 'abv') {
+      return `Sort ${sortDirection === 'asc' ? 'high to low' : 'low to high'}`;
+    }
+    return `Sort ${next} (${sortDirection === 'asc' ? 'Z–A' : 'A–Z'})`;
+  });
 </script>
 
 <section class="list-view">
@@ -33,14 +58,29 @@
     </label>
 
     <div class="control-row">
-      <label class="sort">
-        <span class="label">Sort</span>
-        <select bind:value={sort}>
-          <option value="brewery">Brewery</option>
-          <option value="name">Name</option>
-          <option value="abv">ABV</option>
-        </select>
-      </label>
+      <div class="sort">
+        <label>
+          <span class="label">Sort</span>
+          <select
+            value={sort}
+            onchange={(e) => selectSort((e.currentTarget as HTMLSelectElement).value as SortKey)}
+          >
+            <option value="brewery">Brewery</option>
+            <option value="name">Name</option>
+            <option value="abv">ABV</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          class="direction"
+          onclick={toggleDirection}
+          aria-label={directionLabel}
+          title={directionLabel}
+          aria-pressed={sortDirection === 'desc'}
+        >
+          {sortDirection === 'asc' ? '↑' : '↓'}
+        </button>
+      </div>
 
       <div class="filter" role="radiogroup" aria-label="Filter">
         {#each [{ value: 'all', label: 'All' }, { value: 'toTry', label: 'To try' }, { value: 'tried', label: 'Tried' }, { value: 'notTried', label: 'Not tried' }] as opt}
@@ -127,6 +167,11 @@
   .sort {
     display: flex;
     align-items: center;
+    gap: 0.35rem;
+  }
+  .sort label {
+    display: flex;
+    align-items: center;
     gap: 0.4rem;
   }
   .sort .label {
@@ -139,6 +184,29 @@
     border-radius: var(--radius);
     padding: 0.35rem 0.5rem;
     font-size: 0.9rem;
+  }
+  .sort .direction {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    padding: 0.35rem 0.55rem;
+    font-size: 0.95rem;
+    line-height: 1;
+    min-width: 2rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .sort .direction:hover {
+    background: var(--color-accent-bg);
+  }
+  .sort .direction:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+  .sort .direction[aria-pressed='true'] {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
   }
 
   .filter {

@@ -106,30 +106,65 @@ describe('buildRows — sort', () => {
     beer({ id: 'd', name: 'Pear', brewery: 'Alpha', abv: 3.5 }),
   ];
 
-  it('sorts by name A-Z', () => {
-    const ids = buildRows(beers, '', 'all', 'name').map((r) => r.beer.id);
-    expect(ids).toEqual(['b', 'c', 'd', 'a']);
+  describe('ascending (default)', () => {
+    it('sorts by name A-Z', () => {
+      const ids = buildRows(beers, '', 'all', 'name').map((r) => r.beer.id);
+      expect(ids).toEqual(['b', 'c', 'd', 'a']);
+    });
+
+    it('sorts by brewery, then by beer name within brewery', () => {
+      const ids = buildRows(beers, '', 'all', 'brewery').map((r) => r.beer.id);
+      // Alpha (Apple, Pear), Bravo (Mango), Charlie (Zebra)
+      expect(ids).toEqual(['b', 'd', 'c', 'a']);
+    });
+
+    it('sorts by ABV low to high', () => {
+      const ids = buildRows(beers, '', 'all', 'abv').map((r) => r.beer.id);
+      expect(ids).toEqual(['d', 'a', 'c', 'b']);
+    });
+
+    it('treats omitted direction as ascending', () => {
+      const explicitAsc = buildRows(beers, '', 'all', 'name', 'asc').map((r) => r.beer.id);
+      const omitted = buildRows(beers, '', 'all', 'name').map((r) => r.beer.id);
+      expect(explicitAsc).toEqual(omitted);
+    });
   });
 
-  it('sorts by brewery, then by beer name within brewery', () => {
-    const ids = buildRows(beers, '', 'all', 'brewery').map((r) => r.beer.id);
-    // Alpha (Apple, Pear), Bravo (Mango), Charlie (Zebra)
-    expect(ids).toEqual(['b', 'd', 'c', 'a']);
+  describe('descending', () => {
+    it('sorts by name Z-A', () => {
+      const ids = buildRows(beers, '', 'all', 'name', 'desc').map((r) => r.beer.id);
+      expect(ids).toEqual(['a', 'd', 'c', 'b']);
+    });
+
+    it('reverses both brewery and within-brewery beer name', () => {
+      const ids = buildRows(beers, '', 'all', 'brewery', 'desc').map((r) => r.beer.id);
+      // Charlie (Zebra), Bravo (Mango), Alpha (Pear, Apple)
+      expect(ids).toEqual(['a', 'c', 'd', 'b']);
+    });
+
+    it('sorts by ABV high to low', () => {
+      const ids = buildRows(beers, '', 'all', 'abv', 'desc').map((r) => r.beer.id);
+      expect(ids).toEqual(['b', 'c', 'a', 'd']);
+    });
   });
 
-  it('sorts by ABV low to high', () => {
-    const ids = buildRows(beers, '', 'all', 'abv').map((r) => r.beer.id);
-    expect(ids).toEqual(['d', 'a', 'c', 'b']);
-  });
-
-  it('sorts missing ABV to the end regardless of sort key', () => {
+  describe('missing-field invariant', () => {
     const beersWithNull = [
       beer({ id: 'x', abv: null }),
       beer({ id: 'y', abv: 5.0 }),
       beer({ id: 'z', abv: 8.0 }),
     ];
-    const ids = buildRows(beersWithNull, '', 'all', 'abv').map((r) => r.beer.id);
-    expect(ids).toEqual(['y', 'z', 'x']);
+
+    it('sorts missing ABV to the end when ascending', () => {
+      const ids = buildRows(beersWithNull, '', 'all', 'abv', 'asc').map((r) => r.beer.id);
+      expect(ids).toEqual(['y', 'z', 'x']);
+    });
+
+    it('still sorts missing ABV to the end when descending', () => {
+      const ids = buildRows(beersWithNull, '', 'all', 'abv', 'desc').map((r) => r.beer.id);
+      // Populated rows descend (z=8, y=5), null still tail-anchored.
+      expect(ids).toEqual(['z', 'y', 'x']);
+    });
   });
 });
 
