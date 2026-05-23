@@ -32,22 +32,22 @@ The catalog is a small JSON file at a fixed, same-origin URL (`/data/catalog.jso
 
 ### Top-level fields
 
-| Field      | Type    | Required | Notes |
-|------------|---------|----------|-------|
-| `version`  | number  | yes      | Catalog schema version. v1 sets this to `1`. Future schema changes bump it and the app may migrate or refuse older shapes. |
-| `datasets` | array   | yes      | At least one entry. Order is preserved and used as the tie-breaker for selection (see below). |
+| Field      | Type   | Required | Notes                                                                                                                      |
+| ---------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `version`  | number | yes      | Catalog schema version. v1 sets this to `1`. Future schema changes bump it and the app may migrate or refuse older shapes. |
+| `datasets` | array  | yes      | At least one entry. Order is preserved and used as the tie-breaker for selection (see below).                              |
 
 ### Per-entry fields
 
-| Field      | Type                                          | Required | Notes |
-|------------|-----------------------------------------------|----------|-------|
-| `id`       | string                                        | yes      | Must match the `id` field inside the referenced dataset JSON. Slug-safe (lowercase, digits, hyphens). The dataset's own `id` is authoritative for user-data namespacing; the catalog `id` is a hint used for selection and display before the dataset itself is fetched. |
-| `name`     | string                                        | yes      | Human-readable festival name. Shown in the future selector and in the app header. |
-| `url`      | string                                        | yes      | URL of the dataset JSON. May be relative (resolved against the catalog's location) or absolute. Cross-origin URLs must serve CORS headers. |
-| `dates`    | `{ start: string, end: string }`              | no       | ISO-8601 dates. Used in the future selector view; ignored in v1. |
-| `location` | string                                        | no       | Free-form venue/city string. Used in the future selector view. |
-| `status`   | `"upcoming" \| "active" \| "archived"`        | no       | Hint for the future selector to sort/group/dim entries. Ignored in v1. |
-| `default`  | boolean                                       | no       | When `true`, the app picks this entry if the user has no saved selection. At most one entry should set this; if multiple do, the first wins. |
+| Field      | Type                                   | Required | Notes                                                                                                                                                                                                                                                                    |
+| ---------- | -------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`       | string                                 | yes      | Must match the `id` field inside the referenced dataset JSON. Slug-safe (lowercase, digits, hyphens). The dataset's own `id` is authoritative for user-data namespacing; the catalog `id` is a hint used for selection and display before the dataset itself is fetched. |
+| `name`     | string                                 | yes      | Human-readable festival name. Shown in the future selector and in the app header.                                                                                                                                                                                        |
+| `url`      | string                                 | yes      | URL of the dataset JSON. May be relative (resolved against the catalog's location) or absolute. Cross-origin URLs must serve CORS headers.                                                                                                                               |
+| `dates`    | `{ start: string, end: string }`       | no       | ISO-8601 dates. Used in the future selector view; ignored in v1.                                                                                                                                                                                                         |
+| `location` | string                                 | no       | Free-form venue/city string. Used in the future selector view.                                                                                                                                                                                                           |
+| `status`   | `"upcoming" \| "active" \| "archived"` | no       | Hint for the future selector to sort/group/dim entries. Ignored in v1.                                                                                                                                                                                                   |
+| `default`  | boolean                                | no       | When `true`, the app picks this entry if the user has no saved selection. At most one entry should set this; if multiple do, the first wins.                                                                                                                             |
 
 ### Validation behavior
 
@@ -96,32 +96,32 @@ The dataset is a JSON file containing a list of beers wrapped in an object that 
 
 ### Per-beer fields
 
-| Field      | Type    | Required | Notes |
-|------------|---------|----------|-------|
-| `id`       | string  | yes      | Stable across dataset versions. User data is keyed off this. The dataset author commits to never re-using or re-purposing an id. |
-| `name`     | string  | yes      | The beer's display name. |
-| `brewery`  | string  | yes      | The brewery's display name. |
-| `abv`      | number  | no       | Percent alcohol by volume, as a number (e.g., `5.2`, not `"5.2%"`). Optional because some festivals publish lists with missing ABVs (especially for last-minute additions). |
-| `style`    | string  | no       | Free-form style label (e.g., "IPA", "Saison", "Imperial Stout"). Optional for the same reason. |
-| `location` | string  | no       | Free-form location string (e.g., "Booth 14", "North Tent"). |
-| `description` | string | no      | Free-form long-form text. The brewery's own write-up, tasting notes, or backstory — whatever the dataset author has. May be multiple paragraphs. No length cap. |
+| Field         | Type   | Required | Notes                                                                                                                                                                       |
+| ------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | string | yes      | Stable across dataset versions. User data is keyed off this. The dataset author commits to never re-using or re-purposing an id.                                            |
+| `name`        | string | yes      | The beer's display name.                                                                                                                                                    |
+| `brewery`     | string | yes      | The brewery's display name.                                                                                                                                                 |
+| `abv`         | number | no       | Percent alcohol by volume, as a number (e.g., `5.2`, not `"5.2%"`). Optional because some festivals publish lists with missing ABVs (especially for last-minute additions). |
+| `style`       | string | no       | Free-form style label (e.g., "IPA", "Saison", "Imperial Stout"). Optional for the same reason.                                                                              |
+| `location`    | string | no       | Free-form location string (e.g., "Booth 14", "North Tent").                                                                                                                 |
+| `description` | string | no       | Free-form long-form text. The brewery's own write-up, tasting notes, or backstory — whatever the dataset author has. May be multiple paragraphs. No length cap.             |
 
 Unknown fields are ignored (forward-compatibility).
 
 ### Top-level fields
 
-| Field       | Type    | Required | Notes |
-|-------------|---------|----------|-------|
-| `id`        | string  | yes      | Stable identifier for this dataset. Used as the namespace key for user data in `localStorage`, so it MUST remain stable across versions of the same dataset (e.g., daily updates of the WBF 2026 list all share `id: "wbf-2026"`). Should be slug-safe (lowercase letters, digits, and hyphens) since it's interpolated into a storage key. Required because user data cannot be safely persisted without it. |
-| `festival`  | string  | no       | Human-readable festival name; shown in the UI. |
-| `updatedAt` | string  | no       | ISO-8601 timestamp. Powers the "updated X ago" indicator. If absent, fall back to the time the dataset was fetched. |
-| `beers`     | array   | yes      | The list of beers. |
+| Field       | Type   | Required | Notes                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | string | yes      | Stable identifier for this dataset. Used as the namespace key for user data in `localStorage`, so it MUST remain stable across versions of the same dataset (e.g., daily updates of the WBF 2026 list all share `id: "wbf-2026"`). Should be slug-safe (lowercase letters, digits, and hyphens) since it's interpolated into a storage key. Required because user data cannot be safely persisted without it. |
+| `festival`  | string | no       | Human-readable festival name; shown in the UI.                                                                                                                                                                                                                                                                                                                                                                |
+| `updatedAt` | string | no       | ISO-8601 timestamp. Powers the "updated X ago" indicator. If absent, fall back to the time the dataset was fetched.                                                                                                                                                                                                                                                                                           |
+| `beers`     | array  | yes      | The list of beers.                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ### Validation behavior
 
 - A dataset missing or malformed `id` is treated as a fatal load error: the app falls back to the cached copy. If there is no cached copy, the app shows an error state. (User data is keyed by `id`; loading a dataset without one would corrupt persistence.)
 - Beers missing required fields (`id`, `name`, `brewery`) are dropped on load, with a console warning. The app still loads with whatever valid beers remain.
-- `abv` values that aren't numbers are treated as missing (the field is set to `null` for that beer; the row is *not* dropped).
+- `abv` values that aren't numbers are treated as missing (the field is set to `null` for that beer; the row is _not_ dropped).
 - The file failing to parse as JSON falls back to the cached copy. If there is no cached copy, the app shows an error state.
 
 ## 3. User data (localStorage)
@@ -167,13 +167,13 @@ taplist:userdata:<datasetId>
 
 ### Per-beer user data
 
-| Field        | Type                                          | Notes |
-|--------------|-----------------------------------------------|-------|
-| `status`     | `"toTry" \| "tried" \| null`                  | The user's progress on this beer. `"toTry"` = queued to try, `"tried"` = sampled, `null` = neither. Mutually exclusive by construction. Setting `opinion` to a non-null value implicitly sets `status = "tried"` (overwriting `"toTry"` if it was there). |
-| `opinion`    | `"liked" \| "disliked" \| null`               | Optional. Null means no opinion. Setting a non-null value implicitly sets `status = "tried"`. Clearing the opinion does *not* revert status. |
-| `notes`      | string                                        | Plain text, ≤280 chars (hard enforced in UI; importer silently truncates longer values). |
-| `notPresent` | boolean                                       | Hides the beer from default views. |
-| `adhoc`      | object (see below)                            | Present only on ad-hoc beers. |
+| Field        | Type                            | Notes                                                                                                                                                                                                                                                     |
+| ------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status`     | `"toTry" \| "tried" \| null`    | The user's progress on this beer. `"toTry"` = queued to try, `"tried"` = sampled, `null` = neither. Mutually exclusive by construction. Setting `opinion` to a non-null value implicitly sets `status = "tried"` (overwriting `"toTry"` if it was there). |
+| `opinion`    | `"liked" \| "disliked" \| null` | Optional. Null means no opinion. Setting a non-null value implicitly sets `status = "tried"`. Clearing the opinion does _not_ revert status.                                                                                                              |
+| `notes`      | string                          | Plain text, ≤280 chars (hard enforced in UI; importer silently truncates longer values).                                                                                                                                                                  |
+| `notPresent` | boolean                         | Hides the beer from default views.                                                                                                                                                                                                                        |
+| `adhoc`      | object (see below)              | Present only on ad-hoc beers.                                                                                                                                                                                                                             |
 
 A beer is "touched" — and therefore included in CSV export — if **any** of the following are true: `status !== null`, `opinion !== null`, `notes !== ""`, `notPresent`, or it is ad-hoc.
 
@@ -181,14 +181,14 @@ A beer is "touched" — and therefore included in CSV export — if **any** of t
 
 When a beer is ad-hoc, its record carries an `adhoc` object holding the source-beer fields (since the beer isn't in the dataset). The id of an ad-hoc beer is locally generated and prefixed `adhoc-`.
 
-| Field      | Type    | Required | Notes |
-|------------|---------|----------|-------|
-| `name`     | string  | yes      | |
-| `brewery`  | string  | no       | |
-| `abv`      | number  | no       | |
-| `style`    | string  | no       | |
-| `location` | string  | no       | |
-| `description` | string | no     | |
+| Field         | Type   | Required | Notes |
+| ------------- | ------ | -------- | ----- |
+| `name`        | string | yes      |       |
+| `brewery`     | string | no       |       |
+| `abv`         | number | no       |       |
+| `style`       | string | no       |       |
+| `location`    | string | no       |       |
+| `description` | string | no       |       |
 
 ### Versioning
 
@@ -208,21 +208,21 @@ Example: `taplist-export-wbf-2026-20260612-153045.csv`.
 
 The header row is required on import. Column order in export is fixed (below) but the importer matches by header name, not position, so re-ordered columns from spreadsheet edits still import correctly.
 
-| Column       | Type     | Notes |
-|--------------|----------|-------|
-| `id`         | string   | Beer id. For ad-hoc beers, the locally generated `adhoc-...` id. |
-| `name`       | string   | Beer name. Always populated. |
-| `brewery`    | string   | Brewery name. |
-| `abv`        | number   | ABV as a number; blank if unknown. |
-| `style`      | string   | Style label. |
-| `location`   | string   | Optional. Blank if not in dataset and not set on an ad-hoc beer. |
-| `description`| string   | Optional. Long-form text; quoted per RFC 4180 (may contain commas, newlines, quotes). Blank if not present. |
-| `to_try`     | boolean  | `true` if the user has queued this beer to try. Mutually exclusive with `tried` (see import semantics). |
-| `tried`      | boolean  | `true` if the user has sampled this beer. Mutually exclusive with `to_try`. |
-| `opinion`    | enum     | `liked`, `disliked`, or blank. |
-| `notes`      | string   | Plain text; may contain commas/newlines (quoted per RFC 4180). |
-| `not_present`| boolean  | `true` / `false`. |
-| `is_adhoc`   | boolean  | `true` for ad-hoc beers, `false` otherwise. |
+| Column        | Type    | Notes                                                                                                       |
+| ------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`          | string  | Beer id. For ad-hoc beers, the locally generated `adhoc-...` id.                                            |
+| `name`        | string  | Beer name. Always populated.                                                                                |
+| `brewery`     | string  | Brewery name.                                                                                               |
+| `abv`         | number  | ABV as a number; blank if unknown.                                                                          |
+| `style`       | string  | Style label.                                                                                                |
+| `location`    | string  | Optional. Blank if not in dataset and not set on an ad-hoc beer.                                            |
+| `description` | string  | Optional. Long-form text; quoted per RFC 4180 (may contain commas, newlines, quotes). Blank if not present. |
+| `to_try`      | boolean | `true` if the user has queued this beer to try. Mutually exclusive with `tried` (see import semantics).     |
+| `tried`       | boolean | `true` if the user has sampled this beer. Mutually exclusive with `to_try`.                                 |
+| `opinion`     | enum    | `liked`, `disliked`, or blank.                                                                              |
+| `notes`       | string  | Plain text; may contain commas/newlines (quoted per RFC 4180).                                              |
+| `not_present` | boolean | `true` / `false`.                                                                                           |
+| `is_adhoc`    | boolean | `true` for ad-hoc beers, `false` otherwise.                                                                 |
 
 ### Export scope
 

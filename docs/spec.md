@@ -65,7 +65,7 @@ A single-select filter (radio chips or segmented control) controls which beers a
 - **All** — every beer (except not-present, see below)
 - **To try** — only beers the user has flagged
 - **Tried** — only beers the user has marked tried
-- **Not tried** — only beers the user has *not* marked tried
+- **Not tried** — only beers the user has _not_ marked tried
 
 Search, sort, and filter compose: e.g. search "saison" + filter "to try" shows only your to-try saisons.
 
@@ -99,7 +99,7 @@ The UI presents two controls (a flag/star for To-try, a check for Tried) that re
 
 ### Opinion: Liked / Disliked
 
-Single-select among `liked`, `disliked`, or unset. Optional. **Setting an opinion automatically sets status to Tried** (since opinions only make sense on beers you've sampled), overwriting a To-try state if it was there. Clearing an opinion does *not* revert status — you still tried it, you just no longer have a recorded opinion.
+Single-select among `liked`, `disliked`, or unset. Optional. **Setting an opinion automatically sets status to Tried** (since opinions only make sense on beers you've sampled), overwriting a To-try state if it was there. Clearing an opinion does _not_ revert status — you still tried it, you just no longer have a recorded opinion.
 
 ### Notes
 
