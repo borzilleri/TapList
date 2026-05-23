@@ -1,12 +1,75 @@
 # TapList — data model
 
-This document defines three distinct data shapes:
+This document defines four distinct data shapes:
 
-1. **The dataset** — JSON file fetched from a known URL at startup.
-2. **User data** — per-beer state stored in `localStorage`.
-3. **The CSV export/import format** — round-trippable representation of user data.
+1. **The catalog** — JSON file listing the festival datasets the app knows about. Fetched first on every load.
+2. **The dataset** — JSON file for one festival, containing its beers. Fetched after the catalog, using a URL the catalog provides.
+3. **User data** — per-beer state stored in `localStorage`, namespaced by dataset id.
+4. **The CSV export/import format** — round-trippable representation of user data.
 
-## 1. Dataset JSON
+## 1. Catalog JSON
+
+The catalog is a small JSON file at a fixed, same-origin URL (`/data/catalog.json`). It enumerates every festival dataset the app can load. The catalog is the only thing the app must know up-front; every dataset is discovered through it.
+
+### Shape
+
+```json
+{
+  "version": 1,
+  "datasets": [
+    {
+      "id": "wbf-2026",
+      "name": "Washington Brewers Festival 2026",
+      "url": "/data/wbf-2026.json",
+      "dates": { "start": "2026-06-12", "end": "2026-06-14" },
+      "location": "Marymoor Park, Redmond WA",
+      "status": "upcoming",
+      "default": true
+    }
+  ]
+}
+```
+
+### Top-level fields
+
+| Field      | Type    | Required | Notes |
+|------------|---------|----------|-------|
+| `version`  | number  | yes      | Catalog schema version. v1 sets this to `1`. Future schema changes bump it and the app may migrate or refuse older shapes. |
+| `datasets` | array   | yes      | At least one entry. Order is preserved and used as the tie-breaker for selection (see below). |
+
+### Per-entry fields
+
+| Field      | Type                                          | Required | Notes |
+|------------|-----------------------------------------------|----------|-------|
+| `id`       | string                                        | yes      | Must match the `id` field inside the referenced dataset JSON. Slug-safe (lowercase, digits, hyphens). The dataset's own `id` is authoritative for user-data namespacing; the catalog `id` is a hint used for selection and display before the dataset itself is fetched. |
+| `name`     | string                                        | yes      | Human-readable festival name. Shown in the future selector and in the app header. |
+| `url`      | string                                        | yes      | URL of the dataset JSON. May be relative (resolved against the catalog's location) or absolute. Cross-origin URLs must serve CORS headers. |
+| `dates`    | `{ start: string, end: string }`              | no       | ISO-8601 dates. Used in the future selector view; ignored in v1. |
+| `location` | string                                        | no       | Free-form venue/city string. Used in the future selector view. |
+| `status`   | `"upcoming" \| "active" \| "archived"`        | no       | Hint for the future selector to sort/group/dim entries. Ignored in v1. |
+| `default`  | boolean                                       | no       | When `true`, the app picks this entry if the user has no saved selection. At most one entry should set this; if multiple do, the first wins. |
+
+### Validation behavior
+
+- A catalog missing or malformed `version` or `datasets` is treated as a fatal load error, falling back to the cached copy if available.
+- Entries missing required fields are dropped with a console warning; the catalog still loads with whatever valid entries remain.
+- If a catalog ends up with zero valid entries, the app shows an error state.
+
+### Selection algorithm
+
+The app picks the active dataset on load by trying, in order:
+
+1. The entry whose `id` matches the `selectedDatasetId` value in localStorage. (Not set in v1 — reserved for the future selector.)
+2. The entry where `default: true`.
+3. The first entry in `datasets`.
+
+The selected entry's `url` is then fetched to load the dataset itself.
+
+### Catalog/dataset id mismatch
+
+If the catalog entry's `id` doesn't match the `id` inside the fetched dataset JSON, the dataset's own `id` is authoritative — user data namespacing follows the dataset. A console warning is logged. This shouldn't happen with a well-maintained catalog, but trusting the dataset over the catalog ensures the user's stored data is never silently mis-keyed.
+
+## 2. Dataset JSON
 
 The dataset is a JSON file containing a list of beers wrapped in an object that carries dataset-level metadata (notably the stable `id`).
 
@@ -61,7 +124,7 @@ Unknown fields are ignored (forward-compatibility).
 - `abv` values that aren't numbers are treated as missing (the field is set to `null` for that beer; the row is *not* dropped).
 - The file failing to parse as JSON falls back to the cached copy. If there is no cached copy, the app shows an error state.
 
-## 2. User data (localStorage)
+## 3. User data (localStorage)
 
 User data is stored under a single `localStorage` key, namespaced by the dataset's `id` field so different datasets never collide.
 
@@ -131,7 +194,7 @@ When a beer is ad-hoc, its record carries an `adhoc` object holding the source-b
 
 The `version` field at the top of the user-data object allows future migrations. v1 sets `version: 1`. Future schema changes bump it and the app migrates older shapes forward on load.
 
-## 3. CSV export/import format
+## 4. CSV export/import format
 
 CSV files are RFC 4180 compliant: fields containing commas, quotes, or newlines are wrapped in double quotes; embedded double quotes are escaped by doubling.
 
@@ -163,7 +226,7 @@ The header row is required on import. Column order in export is fixed (below) bu
 
 ### Export scope
 
-Only "touched" beers (per the definition in section 2) are exported.
+Only "touched" beers (per the definition in section 3) are exported.
 
 ### Import semantics
 

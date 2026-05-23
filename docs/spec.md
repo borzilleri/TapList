@@ -6,7 +6,7 @@ This document describes what the app does and how it behaves. The dataset and st
 
 - Single-page web app with no server-side components.
 - Installable PWA with full offline support: service worker caches the app shell and the latest dataset so the app works with zero signal once first loaded.
-- Static hosting (any CDN-backed static host is fine).
+- Hosted on **GitHub Pages** from the app repo. The default `<user>.github.io/<repo>` hostname is used during development and early deploys; a custom domain will be wired up later (DNS change only — no code impact, since all dataset URLs are relative to the deployed site root).
 - Mobile-first responsive layout. Primary target is a phone in portrait, one-handed use. Tablet and desktop get wider, more spacious versions of the same UI.
 - Browser support: latest two versions of Chrome, Safari, Firefox, and Edge; iOS Safari 14+.
 - Accessibility target: WCAG 2.1 AA.
@@ -23,13 +23,22 @@ Alternatives like Preact + Vite are fine. Full React, Next.js, and SvelteKit are
 
 ## Dataset
 
-- The beer list is a JSON file fetched from a known URL at startup.
-- The fetched dataset is cached locally; on subsequent loads the cached copy is used immediately and a background fetch updates it.
-- If the fetch fails (offline, server down), the cached copy is used silently.
-- A subtle indicator near the top of the list shows when the dataset was last successfully updated (e.g., "updated 5 min ago"). No manual refresh button.
-- The dataset URL is a build-time configuration value. v1 points at the WBF dataset; the architecture supports swapping it for other festivals in future versions, but no in-app switcher.
+The app discovers and loads datasets through a two-step fetch:
 
-See [data-model.md](data-model.md) for field-level schema.
+1. **Catalog fetch.** On startup, the app fetches a fixed catalog JSON from a known same-origin URL (`/data/catalog.json`). The catalog lists every festival dataset the app knows about, with metadata (name, dates, location, URL of the dataset itself).
+2. **Dataset fetch.** The app picks the active dataset from the catalog (see selection rules below) and fetches it from the URL the catalog specifies. The dataset is the beer list.
+
+Both files are cached locally after a successful fetch. On subsequent loads, the cached copies are used immediately and a background fetch updates them. If a background fetch fails (offline, server down), the cached copy is used silently and the user sees no error — this is the steady-state festival case.
+
+**First-load behavior.** On the very first load with no cache available, the app requires connectivity to bootstrap the catalog. If both the network fetch and the cache are unavailable, the app shows an error state explaining that an initial connection is needed. After the first successful load, the PWA service worker keeps everything available offline.
+
+**Selection rules (v1).** The catalog may list multiple datasets, but v1 does not expose a selector. The app picks, in order: (1) the dataset whose `id` matches a `selectedDatasetId` stored in localStorage (future feature; never set in v1), (2) the entry marked `default: true` in the catalog, (3) the first entry in the list. Selection is deterministic and invisible to the user.
+
+**Freshness indicator.** A subtle indicator near the top of the list shows when the active dataset was last successfully updated (e.g., "updated 5 min ago"). No manual refresh button.
+
+**Future-friendliness.** The catalog indirection means adding a second festival is a content change, not a code change. When a settings-panel selector is added in a future version, it simply exposes a choice that the data layer already supports. User data is namespaced by dataset `id`, so switching between datasets is non-destructive.
+
+See [data-model.md](data-model.md) for the catalog and dataset schemas.
 
 ## List view
 
