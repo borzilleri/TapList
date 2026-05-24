@@ -30,10 +30,25 @@ export class PwaState {
    * Register the service worker. Returns immediately; the SW download +
    * activation happens in the background. Safe to call multiple times
    * (subsequent calls are no-ops).
+   *
+   * In dev mode, also unregisters any pre-existing service workers. SWs
+   * survive across dev/preview/prod sessions on the same origin, so a
+   * leftover SW from a prior `npm run preview` (or an installed PWA)
+   * will silently intercept fetches under `npm run dev` and serve stale
+   * cached assets. The symptom is hard-to-debug layout/JS weirdness
+   * because CSS scope hashes from the cached build don't match the
+   * fresh JS being served by Vite. Auto-unregistering eliminates that
+   * class of bug.
    */
   async register(): Promise<void> {
     if (this.updateSW !== null) return;
     if (typeof window === 'undefined') return;
+
+    if (import.meta.env.DEV) {
+      await unregisterAll();
+      return;
+    }
+
     // Dynamic import so the bundler can drop this entirely in non-PWA builds.
     const { registerSW } = await import('virtual:pwa-register');
     this.updateSW = registerSW({
@@ -66,4 +81,31 @@ export class PwaState {
 
 export function createPwaState(): PwaState {
   return new PwaState();
+}
+
+/**
+ * Unregister every service worker on this origin and purge their caches.
+ * Called in dev mode so a leftover SW from a prior preview/prod session
+ * can't intercept dev-server fetches with stale assets. Logs a one-time
+ * notice when something is actually unregistered, so the developer
+ * understands why the page may have just behaved oddly on the previous
+ * load.
+ */
+async function unregisterAll(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    if (regs.length === 0) return;
+    await Promise.all(regs.map((r) => r.unregister()));
+    if ('caches' in window) {
+      const names = await caches.keys();
+      await Promise.all(names.map((n) => caches.delete(n)));
+    }
+    console.info(
+      `[pwa] Unregistered ${regs.length} pre-existing service worker(s) and cleared caches ` +
+        `(dev mode). Reload once more if you see stale assets.`,
+    );
+  } catch (err) {
+    console.warn('[pwa] Failed to unregister pre-existing service workers:', err);
+  }
 }
