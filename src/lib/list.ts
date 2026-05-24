@@ -6,36 +6,59 @@
  * in any order without surprise interactions.
  */
 
-import type { Beer, FilterMode, SortDirection, SortKey } from './types';
+import { EMPTY_BEER_USER_STATE } from './types';
+import type { Beer, BeerUserState, FilterMode, SortDirection, SortKey, UserData } from './types';
 
 const SNIPPET_CONTEXT_CHARS = 40;
 const MAX_SNIPPET_LEN = 120;
 
 export interface BeerRowVM {
   beer: Beer;
+  state: BeerUserState;
   /** When the search matched ONLY the description, a snippet to show inline. */
   descriptionSnippet: string | null;
   /** Indices into `descriptionSnippet` for highlight. Null when no snippet. */
   highlightRange: { start: number; end: number } | null;
 }
 
+export interface BuildRowsOptions {
+  search: string;
+  filter: FilterMode;
+  sort: SortKey;
+  direction?: SortDirection;
+  /** When true, beers marked `notPresent` are included; otherwise hidden. */
+  showNotPresent?: boolean;
+}
+
 /**
  * Returns the row view-model after applying search, then filter, then sort.
  *
- * Filter is currently always 'all' in slice 1 since there's no user state, but
- * the parameter is here so the pipeline is shaped correctly for the next slice.
+ * Pipeline (in order):
+ *   not-present hiding -> search -> filter -> sort -> snippet extraction
+ *
+ * `userData` is the active user state. Filters and the not-present hide
+ * step read from it. Beers with no entry use the empty default.
  */
 export function buildRows(
   beers: Beer[],
-  search: string,
-  filter: FilterMode,
-  sort: SortKey,
-  direction: SortDirection = 'asc',
+  userData: UserData,
+  options: BuildRowsOptions,
 ): BeerRowVM[] {
+  const { search, filter, sort, direction = 'asc', showNotPresent = false } = options;
   const q = search.trim().toLowerCase();
-  const filtered = beers.filter((b) => matchesSearch(b, q) && matchesFilter(b, filter));
+  const filtered = beers.filter((b) => {
+    const state = stateFor(userData, b.id);
+    if (!showNotPresent && state.notPresent) return false;
+    if (!matchesSearch(b, q)) return false;
+    if (!matchesFilter(state, filter)) return false;
+    return true;
+  });
   const sorted = [...filtered].sort(comparator(sort, direction));
-  return sorted.map((beer) => buildVm(beer, q));
+  return sorted.map((beer) => buildVm(beer, stateFor(userData, beer.id), q));
+}
+
+function stateFor(userData: UserData, beerId: string): BeerUserState {
+  return userData.beers[beerId] ?? EMPTY_BEER_USER_STATE;
 }
 
 // --- Search ------------------------------------------------------------------
@@ -65,15 +88,25 @@ function matchedOnlyDescription(beer: Beer, q: string): boolean {
 // --- Filter ------------------------------------------------------------------
 
 /**
- * In slice 1 there is no per-beer user state yet, so every filter mode but
- * 'tried' / 'toTry' shows everything. We keep the type/contract in place so
- * the next slice can drop in the real predicate without changing call sites.
+ * Filter predicate against per-beer user state.
+ *
+ * - 'all'      — show every (non-hidden) beer
+ * - 'toTry'    — only beers with status === 'toTry'
+ * - 'tried'    — only beers with status === 'tried'
+ * - 'notTried' — beers whose status is NOT 'tried' (i.e. null or 'toTry')
+ *                so the festival-goer can see what's still on the table.
  */
-function matchesFilter(_beer: Beer, mode: FilterMode): boolean {
-  // No user state yet. 'all' and 'notTried' both show everything;
-  // 'toTry' and 'tried' show nothing since no beer is in those states.
-  if (mode === 'toTry' || mode === 'tried') return false;
-  return true;
+function matchesFilter(state: BeerUserState, mode: FilterMode): boolean {
+  switch (mode) {
+    case 'all':
+      return true;
+    case 'toTry':
+      return state.status === 'toTry';
+    case 'tried':
+      return state.status === 'tried';
+    case 'notTried':
+      return state.status !== 'tried';
+  }
 }
 
 // --- Sort --------------------------------------------------------------------
@@ -109,9 +142,9 @@ function comparator(sort: SortKey, direction: SortDirection): (a: Beer, b: Beer)
 
 // --- Snippet extraction ------------------------------------------------------
 
-function buildVm(beer: Beer, q: string): BeerRowVM {
+function buildVm(beer: Beer, state: BeerUserState, q: string): BeerRowVM {
   if (!matchedOnlyDescription(beer, q)) {
-    return { beer, descriptionSnippet: null, highlightRange: null };
+    return { beer, state, descriptionSnippet: null, highlightRange: null };
   }
   // Safe: matchedOnlyDescription returned true.
   const desc = beer.description!;
@@ -132,6 +165,7 @@ function buildVm(beer: Beer, q: string): BeerRowVM {
   const hlEnd = hlStart + q.length;
   return {
     beer,
+    state,
     descriptionSnippet: snippet,
     highlightRange: { start: hlStart, end: hlEnd },
   };
