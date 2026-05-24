@@ -167,6 +167,20 @@ export class UserStore {
   }
 
   /**
+   * Wholesale-replace the entire UserData for the active dataset. Used by
+   * CSV import — destructive, mirrors the spec's "replace" semantics.
+   * Caller is responsible for prompting the user before invoking.
+   */
+  replaceData(data: UserData): void {
+    if (this.datasetId === null) {
+      console.warn('UserStore.replaceData called before activate()');
+      return;
+    }
+    this.data = data;
+    saveUserData(this.datasetId, this.data, this.storage);
+  }
+
+  /**
    * Permanently remove an ad-hoc beer. Unlike dataset beers (which can only
    * be marked notPresent), ad-hoc beers are user-created and can be deleted
    * outright. No-op on dataset beers — only ad-hoc records are removed.

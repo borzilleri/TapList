@@ -3,12 +3,36 @@
     showNotPresent: boolean;
     onClose: () => void;
     onToggleShowNotPresent: (next: boolean) => void;
+    onExport: () => void;
+    onImportFile: (file: File) => void;
+    /**
+     * Last import outcome. When set, rendered as a status line under the
+     * Import button. Cleared when the drawer opens again from scratch.
+     */
+    importStatus?: string | null;
   }
 
-  const { showNotPresent, onClose, onToggleShowNotPresent }: Props = $props();
+  const {
+    showNotPresent,
+    onClose,
+    onToggleShowNotPresent,
+    onExport,
+    onImportFile,
+    importStatus = null,
+  }: Props = $props();
+
+  let fileInput: HTMLInputElement | undefined = $state();
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
+  }
+
+  function onFileChange(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) onImportFile(file);
+    // Reset so picking the same file again re-fires the change event.
+    input.value = '';
   }
 </script>
 
@@ -51,6 +75,38 @@
           </span>
         </span>
       </label>
+    </section>
+
+    <section class="group" aria-label="Backup">
+      <h3 class="group-title">Backup</h3>
+      <p class="group-desc">
+        Move your flags, ratings, and notes between devices via CSV. The export includes only the
+        beers you've actually touched.
+      </p>
+      <div class="action-row">
+        <button type="button" class="action-btn" onclick={onExport}>Export to CSV</button>
+        <button type="button" class="action-btn" onclick={() => fileInput?.click()}>
+          Import from CSV…
+        </button>
+        <!--
+          Hidden native file input. We trigger it programmatically from the
+          Import button so we control the styling of the visible control.
+        -->
+        <input
+          bind:this={fileInput}
+          type="file"
+          accept=".csv,text/csv"
+          class="file-input-hidden"
+          onchange={onFileChange}
+        />
+      </div>
+      {#if importStatus}
+        <p class="import-status" role="status">{importStatus}</p>
+      {/if}
+      <p class="warning">
+        Importing <strong>replaces</strong> all your current ratings, flags, and notes. You'll be asked
+        to confirm.
+      </p>
     </section>
 
     <p class="footer-note">
@@ -151,6 +207,73 @@
     display: block;
     margin-top: 0.15rem;
     font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
+
+  .group-title {
+    margin: 0 0 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .group-desc {
+    margin: 0 0 0.7rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
+
+  .action-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .action-btn {
+    padding: 0.6rem 0.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    cursor: pointer;
+    min-height: 44px;
+    text-align: center;
+  }
+  @media (hover: hover) {
+    .action-btn:hover {
+      background: var(--color-accent-bg);
+    }
+  }
+  .action-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+  .file-input-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .import-status {
+    margin: 0.5rem 0 0;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-accent-bg);
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: var(--color-text);
+    line-height: 1.4;
+  }
+
+  .warning {
+    margin: 0.6rem 0 0;
+    font-size: 0.78rem;
     color: var(--color-text-muted);
     line-height: 1.4;
   }
