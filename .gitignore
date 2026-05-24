@@ -30,6 +30,7 @@ coverage
 # Build / cache
 .svelte-kit
 .turbo
+.vite
 
 # Tooling
 .claude/
