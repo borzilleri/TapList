@@ -51,7 +51,7 @@
           <span class="icon disliked" aria-label="Disliked" title="Disliked">👎</span>
         {/if}
         {#if hasNotes}
-          <span class="icon has-notes" aria-label="Has notes" title="Has notes">✎</span>
+          <span class="icon has-notes" aria-label="Has notes" title="Has notes">📝</span>
         {/if}
         {#if vm.state.notPresent}
           <span class="icon not-present-tag" aria-label="Not present" title="Not present">⊘</span>
