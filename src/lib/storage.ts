@@ -90,11 +90,19 @@ export function parseUserData(raw: unknown): UserData {
 function parseBeerState(raw: unknown): BeerUserState | null {
   if (!raw || typeof raw !== 'object') return null;
   const s = raw as Record<string, unknown>;
-  const status = parseStatus(s.status);
-  const opinion = parseOpinion(s.opinion);
-  const notes = parseNotes(s.notes);
+  let status = parseStatus(s.status);
+  let opinion = parseOpinion(s.opinion);
+  let notes = parseNotes(s.notes);
   const notPresent = s.notPresent === true;
   const adhoc = parseAdhoc(s.adhoc);
+
+  // Enforce the invariant: a not-present beer can't carry status/opinion/notes.
+  // If storage has both (e.g. hand-edited), not-present wins.
+  if (notPresent) {
+    status = null;
+    opinion = null;
+    notes = '';
+  }
 
   // If the entry has no actual data on it, treat it as absent so we don't
   // bloat storage with empty records. Ad-hoc beers always carry data, so
@@ -128,9 +136,12 @@ function parseNotes(value: unknown): string {
 function parseAdhoc(value: unknown): AdhocBeerPayload | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const a = value as Record<string, unknown>;
+  // name and brewery are both required; missing either invalidates the
+  // payload (the entry might still have user state, which parseBeerState
+  // preserves separately).
   if (typeof a.name !== 'string' || a.name.length === 0) return undefined;
-  const result: AdhocBeerPayload = { name: a.name };
-  if (typeof a.brewery === 'string') result.brewery = a.brewery;
+  if (typeof a.brewery !== 'string' || a.brewery.length === 0) return undefined;
+  const result: AdhocBeerPayload = { name: a.name, brewery: a.brewery };
   if (typeof a.abv === 'number' && Number.isFinite(a.abv)) result.abv = a.abv;
   else if (a.abv === null) result.abv = null;
   if (typeof a.style === 'string') result.style = a.style;

@@ -9,6 +9,7 @@
 import {
   EMPTY_BEER_USER_STATE,
   NOTES_MAX_LENGTH,
+  type AdhocBeerPayload,
   type BeerStatus,
   type BeerUserState,
   type Opinion,
@@ -54,13 +55,77 @@ export function applyNotes(state: BeerUserState, notes: string): BeerUserState {
   return { ...state, notes: clipped };
 }
 
-/** Apply a not-present toggle. */
+/**
+ * Apply a not-present toggle.
+ *
+ * When marking a beer as not-present, status / opinion / notes are
+ * cleared. A beer that isn't at the festival can't have a queue position,
+ * a tasting opinion, or notes about how it tasted — those states only
+ * make sense for present beers. This enforces the invariant
+ * `notPresent === true ⇒ status === null && opinion === null && notes === ''`.
+ *
+ * Unmarking not-present does NOT restore prior state — once cleared, the
+ * user data is gone. The beer comes back as untouched.
+ */
 export function applyNotPresent(state: BeerUserState, notPresent: boolean): BeerUserState {
   if (state.notPresent === notPresent) return state;
-  return { ...state, notPresent };
+  if (notPresent) {
+    return { ...state, notPresent: true, status: null, opinion: null, notes: '' };
+  }
+  return { ...state, notPresent: false };
 }
 
 /** Convenience: a beer's "before" state when the user touches a never-seen beer. */
 export function startingState(): BeerUserState {
   return { ...EMPTY_BEER_USER_STATE };
+}
+
+// --- Ad-hoc beers ------------------------------------------------------------
+
+/**
+ * Build the initial user-data entry for a newly-created ad-hoc beer.
+ * Status / opinion / notes / notPresent all start at their defaults; the
+ * caller can apply further mutations afterward if needed.
+ */
+export function startingAdhocState(payload: AdhocBeerPayload): BeerUserState {
+  return {
+    ...EMPTY_BEER_USER_STATE,
+    adhoc: sanitizeAdhocPayload(payload),
+  };
+}
+
+/**
+ * Apply edits to the ad-hoc payload of an existing beer state. Leaves
+ * status/opinion/notes/notPresent untouched. Returns the same object if
+ * the state isn't ad-hoc (defensive — caller shouldn't invoke for dataset
+ * beers).
+ */
+export function applyAdhocEdit(state: BeerUserState, payload: AdhocBeerPayload): BeerUserState {
+  if (!state.adhoc) return state;
+  return { ...state, adhoc: sanitizeAdhocPayload(payload) };
+}
+
+/**
+ * Trim string fields and normalize empty optional values to undefined so
+ * round-tripping through storage produces a stable shape. `name` and
+ * `brewery` are required; the form is the validation boundary, so we
+ * trust them to be non-empty after trim.
+ */
+function sanitizeAdhocPayload(payload: AdhocBeerPayload): AdhocBeerPayload {
+  const result: AdhocBeerPayload = {
+    name: payload.name.trim(),
+    brewery: payload.brewery.trim(),
+  };
+  if (typeof payload.abv === 'number' && Number.isFinite(payload.abv)) {
+    result.abv = payload.abv;
+  } else if (payload.abv === null) {
+    result.abv = null;
+  }
+  const style = payload.style?.trim();
+  if (style) result.style = style;
+  const location = payload.location?.trim();
+  if (location) result.location = location;
+  const description = payload.description?.trim();
+  if (description) result.description = description;
+  return result;
 }

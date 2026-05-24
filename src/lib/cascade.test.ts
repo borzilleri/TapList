@@ -3,7 +3,15 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { applyNotPresent, applyNotes, applyOpinion, applyStatus, startingState } from './cascade';
+import {
+  applyAdhocEdit,
+  applyNotPresent,
+  applyNotes,
+  applyOpinion,
+  applyStatus,
+  startingAdhocState,
+  startingState,
+} from './cascade';
 
 describe('applyStatus', () => {
   it('sets the status from null', () => {
@@ -149,10 +157,126 @@ describe('applyNotPresent', () => {
     expect(applyNotPresent(startingState(), true).notPresent).toBe(true);
   });
 
-  it('does not affect other fields', () => {
-    const initial = { ...startingState(), status: 'tried' as const, opinion: 'liked' as const };
+  it('clears status, opinion, and notes when set to true', () => {
+    const initial = {
+      ...startingState(),
+      status: 'tried' as const,
+      opinion: 'liked' as const,
+      notes: 'bright citrus',
+    };
     const result = applyNotPresent(initial, true);
+    expect(result.notPresent).toBe(true);
+    expect(result.status).toBeNull();
+    expect(result.opinion).toBeNull();
+    expect(result.notes).toBe('');
+  });
+
+  it('preserves the ad-hoc payload when marking not-present', () => {
+    const initial = {
+      ...startingState(),
+      status: 'tried' as const,
+      adhoc: { name: 'Mystery', brewery: 'Backstage' },
+    };
+    const result = applyNotPresent(initial, true);
+    expect(result.adhoc).toEqual({ name: 'Mystery', brewery: 'Backstage' });
+    expect(result.status).toBeNull();
+  });
+
+  it('does NOT restore prior state when unmarked', () => {
+    // Once cleared by marking not-present, the data is gone — toggling back
+    // gives a clean beer, not the prior status/opinion/notes.
+    const initial = {
+      ...startingState(),
+      status: 'tried' as const,
+      opinion: 'liked' as const,
+    };
+    const marked = applyNotPresent(initial, true);
+    const unmarked = applyNotPresent(marked, false);
+    expect(unmarked.notPresent).toBe(false);
+    expect(unmarked.status).toBeNull();
+    expect(unmarked.opinion).toBeNull();
+  });
+
+  it('is a no-op when setting to the same value', () => {
+    const initial = { ...startingState(), notPresent: true };
+    const result = applyNotPresent(initial, true);
+    expect(result).toBe(initial);
+  });
+});
+
+describe('startingAdhocState', () => {
+  it('produces a fresh user state with the ad-hoc payload populated', () => {
+    const state = startingAdhocState({
+      name: 'Mystery Sour',
+      brewery: 'Backstage',
+      abv: 4.5,
+      style: 'Sour',
+    });
+    expect(state.status).toBeNull();
+    expect(state.opinion).toBeNull();
+    expect(state.notes).toBe('');
+    expect(state.notPresent).toBe(false);
+    expect(state.adhoc).toEqual({
+      name: 'Mystery Sour',
+      brewery: 'Backstage',
+      abv: 4.5,
+      style: 'Sour',
+    });
+  });
+
+  it('trims whitespace on string fields', () => {
+    const state = startingAdhocState({
+      name: '  Mystery Sour  ',
+      brewery: '  Backstage  ',
+      style: ' Sour ',
+      location: ' Booth 47 ',
+      description: ' Funky, briny. ',
+    });
+    expect(state.adhoc).toEqual({
+      name: 'Mystery Sour',
+      brewery: 'Backstage',
+      style: 'Sour',
+      location: 'Booth 47',
+      description: 'Funky, briny.',
+    });
+  });
+
+  it('drops empty optional strings', () => {
+    const state = startingAdhocState({
+      name: 'Mystery',
+      brewery: 'Backstage',
+      style: '   ',
+      location: '',
+      description: '',
+    });
+    expect(state.adhoc).toEqual({ name: 'Mystery', brewery: 'Backstage' });
+  });
+
+  it('preserves explicit null ABV (intentional unknown)', () => {
+    const state = startingAdhocState({ name: 'Mystery', brewery: 'Backstage', abv: null });
+    expect(state.adhoc?.abv).toBeNull();
+  });
+
+  it('drops non-finite ABV (NaN/Infinity treated as unknown)', () => {
+    const state = startingAdhocState({ name: 'Mystery', brewery: 'Backstage', abv: Number.NaN });
+    expect(state.adhoc?.abv).toBeUndefined();
+  });
+});
+
+describe('applyAdhocEdit', () => {
+  it('updates the ad-hoc payload but leaves user state alone', () => {
+    const initial = startingAdhocState({ name: 'Old name', brewery: 'Old brew' });
+    const withState = { ...initial, status: 'tried' as const, notes: 'great' };
+    const result = applyAdhocEdit(withState, { name: 'New name', brewery: 'NewBrew' });
+    expect(result.adhoc).toEqual({ name: 'New name', brewery: 'NewBrew' });
     expect(result.status).toBe('tried');
-    expect(result.opinion).toBe('liked');
+    expect(result.notes).toBe('great');
+  });
+
+  it('is a no-op on dataset beers (no adhoc payload)', () => {
+    const datasetBeer = startingState();
+    const result = applyAdhocEdit(datasetBeer, { name: 'Should not apply', brewery: 'X' });
+    expect(result).toBe(datasetBeer);
+    expect(result.adhoc).toBeUndefined();
   });
 });

@@ -68,7 +68,7 @@ export type Opinion = 'liked' | 'disliked' | null;
  */
 export interface AdhocBeerPayload {
   name: string;
-  brewery?: string;
+  brewery: string;
   abv?: number | null;
   style?: string;
   location?: string;
@@ -95,6 +95,19 @@ export const EMPTY_BEER_USER_STATE: Readonly<BeerUserState> = Object.freeze({
   notes: '',
   notPresent: false,
 });
+
+// --- App-wide settings (persisted to localStorage) ---
+
+/**
+ * Settings that apply across the whole app (not per-dataset). Persisted
+ * to localStorage under `taplist:settings`. Versioned for future
+ * migrations.
+ */
+export interface AppSettings {
+  version: 1;
+  /** When true, beers the user has marked notPresent are visible in the list. */
+  showNotPresent: boolean;
+}
 
 // --- View model: sort/filter/search state for the list view ---
 

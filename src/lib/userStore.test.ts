@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { createUserStore } from './userStore.svelte';
+import { createUserStore, generateAdhocId, isAdhocId } from './userStore.svelte';
 import { storageKeyFor, type StorageLike } from './storage';
 
 function makeStorage(initial: Record<string, string> = {}): StorageLike & {
@@ -165,10 +165,138 @@ describe('UserStore mutations + persistence', () => {
     expect(readPersisted(storage)?.beers?.b1?.notes.length).toBe(280);
   });
 
-  it('notPresent toggles independently of other state', () => {
+  it('notPresent toggles to true on an empty beer', () => {
     const { store } = freshStore();
     store.setNotPresent('b1', true);
     expect(store.get('b1').notPresent).toBe(true);
     expect(store.get('b1').status).toBeNull();
+  });
+
+  it('marking not-present clears status, opinion, and notes (cascade)', () => {
+    const { store, storage } = freshStore();
+    store.setStatus('b1', 'tried');
+    store.setOpinion('b1', 'liked');
+    store.setNotes('b1', 'memorable');
+    store.setNotPresent('b1', true);
+    const state = store.get('b1');
+    expect(state.notPresent).toBe(true);
+    expect(state.status).toBeNull();
+    expect(state.opinion).toBeNull();
+    expect(state.notes).toBe('');
+    // Persisted to storage too.
+    expect(readPersisted(storage)?.beers?.b1).toEqual({
+      status: null,
+      opinion: null,
+      notes: '',
+      notPresent: true,
+    });
+  });
+});
+
+describe('UserStore ad-hoc beers', () => {
+  function freshStore() {
+    const storage = makeStorage();
+    const store = createUserStore(storage);
+    store.activate('wbf-2026');
+    return { store, storage };
+  }
+
+  function readPersisted(storage: ReturnType<typeof makeStorage>) {
+    const raw = storage.raw.get(storageKeyFor('wbf-2026'));
+    return raw === undefined ? null : JSON.parse(raw);
+  }
+
+  describe('generateAdhocId / isAdhocId', () => {
+    it('produces ids with the adhoc- prefix', () => {
+      const id = generateAdhocId();
+      expect(isAdhocId(id)).toBe(true);
+      expect(id.startsWith('adhoc-')).toBe(true);
+    });
+
+    it('returns false for dataset-style ids', () => {
+      expect(isAdhocId('wbf26-0001')).toBe(false);
+      expect(isAdhocId('mock-0030')).toBe(false);
+    });
+
+    it('produces unique ids on each call', () => {
+      const ids = new Set([generateAdhocId(), generateAdhocId(), generateAdhocId()]);
+      expect(ids.size).toBe(3);
+    });
+  });
+
+  describe('addAdhoc', () => {
+    it('creates a new ad-hoc beer and returns its id', () => {
+      const { store, storage } = freshStore();
+      const id = store.addAdhoc({ name: 'Mystery Sour', brewery: 'Backstage' });
+      expect(isAdhocId(id)).toBe(true);
+      expect(store.get(id).adhoc).toEqual({ name: 'Mystery Sour', brewery: 'Backstage' });
+      expect(readPersisted(storage)?.beers?.[id]?.adhoc?.name).toBe('Mystery Sour');
+    });
+
+    it('starts user state at defaults (not touched yet beyond being adhoc)', () => {
+      const { store } = freshStore();
+      const id = store.addAdhoc({ name: 'Mystery', brewery: 'Backstage' });
+      const state = store.get(id);
+      expect(state.status).toBeNull();
+      expect(state.opinion).toBeNull();
+      expect(state.notes).toBe('');
+      expect(state.notPresent).toBe(false);
+    });
+
+    it('produces distinct ids when added in sequence', () => {
+      const { store } = freshStore();
+      const a = store.addAdhoc({ name: 'A', brewery: 'Brew' });
+      const b = store.addAdhoc({ name: 'B', brewery: 'Brew' });
+      expect(a).not.toBe(b);
+      expect(store.get(a).adhoc?.name).toBe('A');
+      expect(store.get(b).adhoc?.name).toBe('B');
+    });
+  });
+
+  describe('updateAdhoc', () => {
+    it('edits an ad-hoc beer payload but preserves user state', () => {
+      const { store } = freshStore();
+      const id = store.addAdhoc({ name: 'Old name', brewery: 'Old brew' });
+      store.setStatus(id, 'tried');
+      store.setNotes(id, 'remember this');
+      store.updateAdhoc(id, { name: 'New name', brewery: 'New brew', abv: 5.5 });
+      const state = store.get(id);
+      expect(state.adhoc).toEqual({ name: 'New name', brewery: 'New brew', abv: 5.5 });
+      expect(state.status).toBe('tried');
+      expect(state.notes).toBe('remember this');
+    });
+
+    it('does nothing on dataset (non-adhoc) ids', () => {
+      const { store } = freshStore();
+      store.setStatus('wbf26-0001', 'toTry');
+      store.updateAdhoc('wbf26-0001', { name: 'Should not apply', brewery: 'X' });
+      expect(store.get('wbf26-0001').adhoc).toBeUndefined();
+    });
+  });
+
+  describe('deleteAdhoc', () => {
+    it('removes the ad-hoc beer entirely', () => {
+      const { store, storage } = freshStore();
+      const id = store.addAdhoc({ name: 'Mystery', brewery: 'Backstage' });
+      expect(readPersisted(storage)?.beers?.[id]).toBeDefined();
+      store.deleteAdhoc(id);
+      expect(readPersisted(storage)?.beers?.[id]).toBeUndefined();
+      expect(store.get(id).adhoc).toBeUndefined();
+    });
+
+    it('ignores non-adhoc ids (defense against accidental data loss)', () => {
+      const { store } = freshStore();
+      store.setStatus('wbf26-0001', 'tried');
+      store.deleteAdhoc('wbf26-0001');
+      expect(store.get('wbf26-0001').status).toBe('tried');
+    });
+
+    it('ignores unknown ids', () => {
+      const { store } = freshStore();
+      store.addAdhoc({ name: 'A', brewery: 'Brew' });
+      const beforeCount = Object.keys(store.all.beers).length;
+      store.deleteAdhoc(generateAdhocId());
+      expect(Object.keys(store.all.beers).length).toBe(beforeCount);
+    });
   });
 });

@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { Beer, BeerUserState, UserData } from './types';
-import { buildRows, type BuildRowsOptions } from './list';
+import { buildRows, mergeBeers, type BuildRowsOptions } from './list';
 import { emptyUserData } from './storage';
 
 function beer(overrides: Partial<Beer> = {}): Beer {
@@ -290,5 +290,53 @@ describe('buildRows — vm carries per-row state', () => {
     expect(vm.state.opinion).toBeNull();
     expect(vm.state.notes).toBe('');
     expect(vm.state.notPresent).toBe(false);
+  });
+});
+
+describe('mergeBeers (dataset + ad-hoc)', () => {
+  it('returns dataset beers unchanged when there are no ad-hoc entries', () => {
+    const beers = [beer({ id: 'a' }), beer({ id: 'b' })];
+    expect(mergeBeers(beers, emptyUserData())).toHaveLength(2);
+  });
+
+  it('appends ad-hoc beers materialized from userData', () => {
+    const dataset = [beer({ id: 'real' })];
+    const data = userData({
+      'adhoc-1': {
+        adhoc: { name: 'Mystery Sour', brewery: 'Backstage', abv: 4.5, style: 'Sour' },
+      },
+    });
+    const merged = mergeBeers(dataset, data);
+    expect(merged).toHaveLength(2);
+    const adhoc = merged.find((b) => b.id === 'adhoc-1')!;
+    expect(adhoc.name).toBe('Mystery Sour');
+    expect(adhoc.brewery).toBe('Backstage');
+    expect(adhoc.abv).toBe(4.5);
+    expect(adhoc.style).toBe('Sour');
+  });
+
+  it('fills missing optional ad-hoc fields with null on the Beer projection', () => {
+    const data = userData({
+      'adhoc-1': { adhoc: { name: 'Bare Bones', brewery: 'Tiny Brew' } },
+    });
+    const merged = mergeBeers([], data);
+    expect(merged[0]).toEqual({
+      id: 'adhoc-1',
+      name: 'Bare Bones',
+      brewery: 'Tiny Brew',
+      abv: null,
+      style: null,
+      location: null,
+      description: null,
+    });
+  });
+
+  it('skips userData entries that lack an adhoc payload (status-only beers)', () => {
+    const data = userData({
+      real: { status: 'toTry' },
+      'adhoc-1': { adhoc: { name: 'A', brewery: 'B' } },
+    });
+    const merged = mergeBeers([], data);
+    expect(merged.map((b) => b.id)).toEqual(['adhoc-1']);
   });
 });

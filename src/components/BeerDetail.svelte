@@ -6,15 +6,28 @@
     beer: Beer;
     store: UserStore;
     onClose: () => void;
+    onEditAdhoc: (id: string) => void;
+    onDeleteAdhoc: (id: string) => void;
   }
 
-  const { beer, store, onClose }: Props = $props();
+  const { beer, store, onClose, onEditAdhoc, onDeleteAdhoc }: Props = $props();
 
   // Per-beer state — reactive via the store getter.
   const state = $derived(store.get(beer.id));
+  const isAdhoc = $derived(state.adhoc !== undefined);
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
+  }
+
+  function handleDelete() {
+    // Confirmation kept simple — native confirm() reads as urgent on mobile
+    // and we don't have a custom dialog component yet (polish slice).
+    const ok = confirm(
+      `Delete "${beer.name}"? This removes it from your list permanently. ` +
+        `If it's a real beer at the festival, marking it not-present hides it without deleting your data.`,
+    );
+    if (ok) onDeleteAdhoc(beer.id);
   }
 
   // Status buttons are radio-like: tapping the active one clears it.
@@ -46,21 +59,24 @@
 <svelte:window onkeydown={onKeydown} />
 
 <!--
-  Click the backdrop to dismiss. The backdrop is intentionally interactive
-  (click-to-close is a standard modal pattern); the keyboard equivalent is
-  Escape, handled at the window level above.
+  Click the backdrop to dismiss. The backdrop's onclick checks
+  `e.target === e.currentTarget` so taps inside the panel don't trigger
+  it — that's more robust than stopPropagation on the panel (which can
+  interact badly with form submit on iOS Safari). Keyboard equivalent
+  for the close action is the Escape key, handled at the window level.
 -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   class="backdrop"
   role="dialog"
   aria-modal="true"
   aria-labelledby="detail-title"
-  onclick={onClose}
+  onclick={(e) => {
+    if (e.target === e.currentTarget) onClose();
+  }}
   tabindex="-1"
 >
-  <div class="panel" role="document" onclick={(e) => e.stopPropagation()}>
+  <div class="panel" role="document">
     <header>
       <h2 id="detail-title">{beer.name}</h2>
       <button class="close" type="button" onclick={onClose} aria-label="Close">×</button>
@@ -94,70 +110,87 @@
     {/if}
 
     <section class="actions" aria-label="Your notes on this beer">
-      <div class="action-group" role="group" aria-label="Status">
-        <button
-          type="button"
-          class="action toTry"
-          class:active={state.status === 'toTry'}
-          aria-pressed={state.status === 'toTry'}
-          onclick={() => setStatus('toTry')}
-        >
-          <span class="icon" aria-hidden="true">★</span> To try
-        </button>
-        <button
-          type="button"
-          class="action tried"
-          class:active={state.status === 'tried'}
-          aria-pressed={state.status === 'tried'}
-          onclick={() => setStatus('tried')}
-        >
-          <span class="icon" aria-hidden="true">✓</span> Tried
-        </button>
-      </div>
+      {#if state.notPresent}
+        <p class="not-present-banner" role="status">
+          <span aria-hidden="true">🚫</span>
+          You've marked this as not at the festival. Status, opinion, and notes are disabled until you
+          bring it back.
+        </p>
+      {:else}
+        <div class="action-group" role="group" aria-label="Status">
+          <button
+            type="button"
+            class="action toTry"
+            class:active={state.status === 'toTry'}
+            aria-pressed={state.status === 'toTry'}
+            onclick={() => setStatus('toTry')}
+          >
+            <span class="icon" aria-hidden="true">★</span> To try
+          </button>
+          <button
+            type="button"
+            class="action tried"
+            class:active={state.status === 'tried'}
+            aria-pressed={state.status === 'tried'}
+            onclick={() => setStatus('tried')}
+          >
+            <span class="icon" aria-hidden="true">✓</span> Tried
+          </button>
+        </div>
 
-      <div class="action-group" role="group" aria-label="Opinion">
-        <button
-          type="button"
-          class="action liked"
-          class:active={state.opinion === 'liked'}
-          aria-pressed={state.opinion === 'liked'}
-          onclick={() => setOpinion('liked')}
-        >
-          <span class="icon" aria-hidden="true">👍</span> Liked
-        </button>
-        <button
-          type="button"
-          class="action disliked"
-          class:active={state.opinion === 'disliked'}
-          aria-pressed={state.opinion === 'disliked'}
-          onclick={() => setOpinion('disliked')}
-        >
-          <span class="icon" aria-hidden="true">👎</span> Disliked
-        </button>
-      </div>
+        <div class="action-group" role="group" aria-label="Opinion">
+          <button
+            type="button"
+            class="action liked"
+            class:active={state.opinion === 'liked'}
+            aria-pressed={state.opinion === 'liked'}
+            onclick={() => setOpinion('liked')}
+          >
+            <span class="icon" aria-hidden="true">👍</span> Liked
+          </button>
+          <button
+            type="button"
+            class="action disliked"
+            class:active={state.opinion === 'disliked'}
+            aria-pressed={state.opinion === 'disliked'}
+            onclick={() => setOpinion('disliked')}
+          >
+            <span class="icon" aria-hidden="true">👎</span> Disliked
+          </button>
+        </div>
 
-      <label class="notes">
-        <span class="notes-label">
-          <span>Notes</span>
-          <span class="counter" class:near-limit={notesRemaining <= 20}>
-            {notesRemaining}
+        <label class="notes">
+          <span class="notes-label">
+            <span>Notes</span>
+            <span class="counter" class:near-limit={notesRemaining <= 20}>
+              {notesRemaining}
+            </span>
           </span>
-        </span>
-        <textarea
-          value={state.notes}
-          oninput={onNotesInput}
-          maxlength={NOTES_MAX_LENGTH}
-          rows="3"
-          placeholder="Citrusy, paired well with the smoked cheese…"
-          autocomplete="off"
-          spellcheck="true"
-        ></textarea>
-      </label>
+          <textarea
+            value={state.notes}
+            oninput={onNotesInput}
+            maxlength={NOTES_MAX_LENGTH}
+            rows="3"
+            placeholder="Citrusy, paired well with the smoked cheese…"
+            autocomplete="off"
+            spellcheck="true"
+          ></textarea>
+        </label>
+      {/if}
 
       <label class="not-present-toggle">
         <input type="checkbox" checked={state.notPresent} onchange={toggleNotPresent} />
         <span>Not at the festival (hide from default views)</span>
       </label>
+
+      {#if isAdhoc}
+        <div class="adhoc-actions" role="group" aria-label="Ad-hoc beer actions">
+          <button type="button" class="adhoc-edit" onclick={() => onEditAdhoc(beer.id)}>
+            Edit details
+          </button>
+          <button type="button" class="adhoc-delete" onclick={handleDelete}>Delete</button>
+        </div>
+      {/if}
     </section>
   </div>
 </div>
@@ -342,6 +375,19 @@
     outline-offset: -1px;
   }
 
+  .not-present-banner {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    background: var(--color-accent-bg);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-text);
+  }
+
   .not-present-toggle {
     display: flex;
     align-items: center;
@@ -353,5 +399,41 @@
   .not-present-toggle input {
     width: 1.1rem;
     height: 1.1rem;
+  }
+
+  .adhoc-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--color-border);
+  }
+  .adhoc-edit,
+  .adhoc-delete {
+    flex: 1;
+    padding: 0.55rem 0.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .adhoc-delete {
+    color: #b3261e;
+    border-color: color-mix(in oklab, #b3261e 30%, var(--color-border));
+  }
+  @media (hover: hover) {
+    .adhoc-edit:hover {
+      background: var(--color-accent-bg);
+    }
+    .adhoc-delete:hover {
+      background: color-mix(in oklab, #b3261e 8%, var(--color-surface));
+    }
+  }
+  .adhoc-edit:focus-visible,
+  .adhoc-delete:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
   }
 </style>

@@ -9,6 +9,35 @@
 import { EMPTY_BEER_USER_STATE } from './types';
 import type { Beer, BeerUserState, FilterMode, SortDirection, SortKey, UserData } from './types';
 
+/**
+ * Combine the dataset's beer list with any ad-hoc beers the user has
+ * created. Ad-hoc beers live as entries in UserData (keyed by their
+ * locally-generated id) with the source-beer fields stashed in the
+ * `adhoc` payload. The merged list is what the list view actually
+ * renders — ad-hoc beers slot in alongside dataset beers and sort
+ * normally.
+ */
+export function mergeBeers(dataset: Beer[], userData: UserData): Beer[] {
+  const out: Beer[] = [...dataset];
+  for (const [id, state] of Object.entries(userData.beers)) {
+    if (!state.adhoc) continue;
+    out.push(adhocAsBeer(id, state.adhoc));
+  }
+  return out;
+}
+
+function adhocAsBeer(id: string, payload: { name: string; brewery: string } & Partial<Beer>): Beer {
+  return {
+    id,
+    name: payload.name,
+    brewery: payload.brewery,
+    abv: payload.abv ?? null,
+    style: payload.style ?? null,
+    location: payload.location ?? null,
+    description: payload.description ?? null,
+  };
+}
+
 const SNIPPET_CONTEXT_CHARS = 40;
 const MAX_SNIPPET_LEN = 120;
 
