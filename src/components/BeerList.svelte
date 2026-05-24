@@ -215,8 +215,10 @@
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
-  .sort .direction:hover {
-    background: var(--color-accent-bg);
+  @media (hover: hover) {
+    .sort .direction:hover {
+      background: var(--color-accent-bg);
+    }
   }
   .sort .direction:focus-visible {
     outline: 2px solid var(--color-accent);
@@ -249,8 +251,10 @@
     opacity: 0;
     pointer-events: none;
   }
-  .chip:hover {
-    background: var(--color-accent-bg);
+  @media (hover: hover) {
+    .chip:hover {
+      background: var(--color-accent-bg);
+    }
   }
   .chip:focus-within {
     outline: 2px solid var(--color-accent);

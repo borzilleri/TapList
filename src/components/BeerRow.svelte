@@ -115,8 +115,10 @@
     cursor: pointer;
     transition: background 0.1s ease;
   }
-  .main:hover {
-    background: var(--color-accent-bg);
+  @media (hover: hover) {
+    .main:hover {
+      background: var(--color-accent-bg);
+    }
   }
   .main:focus-visible {
     outline: 2px solid var(--color-accent);
@@ -202,9 +204,11 @@
       background 0.1s ease,
       color 0.1s ease;
   }
-  .star:hover {
-    background: var(--color-accent-bg);
-    color: var(--color-accent);
+  @media (hover: hover) {
+    .star:hover {
+      background: var(--color-accent-bg);
+      color: var(--color-accent);
+    }
   }
   .star:focus-visible {
     outline: 2px solid var(--color-accent);

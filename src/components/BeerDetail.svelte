@@ -216,12 +216,13 @@
     padding: 0 0.25rem;
     color: var(--color-text-muted);
   }
-  .close:hover,
-  .close:focus-visible {
-    color: var(--color-text);
-    outline: none;
+  @media (hover: hover) {
+    .close:hover {
+      color: var(--color-text);
+    }
   }
   .close:focus-visible {
+    color: var(--color-text);
     outline: 2px solid var(--color-accent);
     border-radius: 4px;
   }
@@ -287,8 +288,10 @@
     cursor: pointer;
     min-height: 44px;
   }
-  .action:hover {
-    background: var(--color-accent-bg);
+  @media (hover: hover) {
+    .action:hover {
+      background: var(--color-accent-bg);
+    }
   }
   .action:focus-visible {
     outline: 2px solid var(--color-accent);
