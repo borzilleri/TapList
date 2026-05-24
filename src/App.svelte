@@ -3,6 +3,7 @@
   import { loadActiveDataset } from './lib/data';
   import { createUserStore } from './lib/userStore.svelte';
   import { createSettingsStore } from './lib/settingsStore.svelte';
+  import { createPwaState } from './lib/pwa.svelte';
   import {
     buildExportFilename,
     parseImport,
@@ -14,6 +15,7 @@
   import FreshnessIndicator from './components/FreshnessIndicator.svelte';
   import SettingsDrawer from './components/SettingsDrawer.svelte';
   import AdhocBeerForm from './components/AdhocBeerForm.svelte';
+  import PwaBanner from './components/PwaBanner.svelte';
   import { mergeBeers } from './lib/list';
 
   // One shared user-data store, persisted to localStorage. Activated below
@@ -23,6 +25,12 @@
   // App-wide settings (theme, show-not-present, future dataset selection).
   // Hydrated immediately — settings are global, not per-dataset.
   const settingsStore = createSettingsStore(window.localStorage);
+
+  // Service-worker registration + update-prompt state. The actual SW
+  // registration happens asynchronously inside register(); errors are
+  // logged but don't block the app from loading.
+  const pwa = createPwaState();
+  pwa.register();
 
   /**
    * Load the catalog + dataset, then activate the user store for that
@@ -236,6 +244,8 @@
     </div>
   {/await}
 </main>
+
+<PwaBanner {pwa} />
 
 {#if settingsOpen}
   <SettingsDrawer
