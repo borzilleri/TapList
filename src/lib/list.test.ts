@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { Beer, BeerUserState, UserData } from './types';
-import { buildRows, type BuildRowsOptions } from './list';
+import { buildRows, mergeBeers, type BuildRowsOptions } from './list';
 import { emptyUserData } from './storage';
 
 function beer(overrides: Partial<Beer> = {}): Beer {
@@ -290,5 +290,81 @@ describe('buildRows — vm carries per-row state', () => {
     expect(vm.state.opinion).toBeNull();
     expect(vm.state.notes).toBe('');
     expect(vm.state.notPresent).toBe(false);
+  });
+});
+
+describe('mergeBeers (dataset + ad-hoc)', () => {
+  it('returns dataset beers unchanged when there are no ad-hoc entries', () => {
+    const beers = [beer({ id: 'a' }), beer({ id: 'b' })];
+    expect(mergeBeers(beers, emptyUserData())).toHaveLength(2);
+  });
+
+  it('appends ad-hoc beers materialized from userData', () => {
+    const dataset = [beer({ id: 'real' })];
+    const data = userData({
+      'adhoc-1': {
+        adhoc: { name: 'Mystery Sour', brewery: 'Backstage', abv: 4.5, style: 'Sour' },
+      },
+    });
+    const merged = mergeBeers(dataset, data);
+    expect(merged).toHaveLength(2);
+    const adhoc = merged.find((b) => b.id === 'adhoc-1')!;
+    expect(adhoc.name).toBe('Mystery Sour');
+    expect(adhoc.brewery).toBe('Backstage');
+    expect(adhoc.abv).toBe(4.5);
+    expect(adhoc.style).toBe('Sour');
+  });
+
+  it('fills missing ad-hoc fields with null on the Beer projection', () => {
+    const data = userData({ 'adhoc-1': { adhoc: { name: 'Bare Bones' } } });
+    const merged = mergeBeers([], data);
+    expect(merged[0]).toEqual({
+      id: 'adhoc-1',
+      name: 'Bare Bones',
+      brewery: null,
+      abv: null,
+      style: null,
+      location: null,
+      description: null,
+    });
+  });
+
+  it('skips userData entries that lack an adhoc payload (status-only beers)', () => {
+    const data = userData({
+      real: { status: 'toTry' },
+      'adhoc-1': { adhoc: { name: 'A' } },
+    });
+    const merged = mergeBeers([], data);
+    expect(merged.map((b) => b.id)).toEqual(['adhoc-1']);
+  });
+});
+
+describe('buildRows — null brewery handling', () => {
+  it('searches do not match a null brewery (vs throwing)', () => {
+    const beers = [beer({ id: 'a', brewery: null, name: 'unique' })];
+    const rows = buildRows(beers, emptyUserData(), opts({ search: 'something' }));
+    expect(rows).toHaveLength(0);
+  });
+
+  it('matches by name even when brewery is null', () => {
+    const beers = [beer({ id: 'a', brewery: null, name: 'Mystery' })];
+    const rows = buildRows(beers, emptyUserData(), opts({ search: 'mystery' }));
+    expect(rows.map((r) => r.beer.id)).toEqual(['a']);
+  });
+
+  it('sorts beers with null brewery to the end (asc and desc)', () => {
+    const beers = [
+      beer({ id: 'nope', brewery: null, name: 'Anon' }),
+      beer({ id: 'a', brewery: 'Alpha', name: 'A' }),
+      beer({ id: 'b', brewery: 'Bravo', name: 'B' }),
+    ];
+    const asc = buildRows(beers, emptyUserData(), opts({ sort: 'brewery' })).map((r) => r.beer.id);
+    expect(asc).toEqual(['a', 'b', 'nope']);
+    const desc = buildRows(
+      beers,
+      emptyUserData(),
+      opts({ sort: 'brewery', direction: 'desc' }),
+    ).map((r) => r.beer.id);
+    expect(desc).toEqual(['b', 'a', 'nope']);
   });
 });

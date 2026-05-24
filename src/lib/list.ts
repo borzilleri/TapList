@@ -9,6 +9,35 @@
 import { EMPTY_BEER_USER_STATE } from './types';
 import type { Beer, BeerUserState, FilterMode, SortDirection, SortKey, UserData } from './types';
 
+/**
+ * Combine the dataset's beer list with any ad-hoc beers the user has
+ * created. Ad-hoc beers live as entries in UserData (keyed by their
+ * locally-generated id) with the source-beer fields stashed in the
+ * `adhoc` payload. The merged list is what the list view actually
+ * renders — ad-hoc beers slot in alongside dataset beers and sort
+ * normally.
+ */
+export function mergeBeers(dataset: Beer[], userData: UserData): Beer[] {
+  const out: Beer[] = [...dataset];
+  for (const [id, state] of Object.entries(userData.beers)) {
+    if (!state.adhoc) continue;
+    out.push(adhocAsBeer(id, state.adhoc));
+  }
+  return out;
+}
+
+function adhocAsBeer(id: string, payload: { name: string } & Partial<Beer>): Beer {
+  return {
+    id,
+    name: payload.name,
+    brewery: payload.brewery ?? null,
+    abv: payload.abv ?? null,
+    style: payload.style ?? null,
+    location: payload.location ?? null,
+    description: payload.description ?? null,
+  };
+}
+
 const SNIPPET_CONTEXT_CHARS = 40;
 const MAX_SNIPPET_LEN = 120;
 
@@ -66,7 +95,7 @@ function stateFor(userData: UserData, beerId: string): BeerUserState {
 function matchesSearch(beer: Beer, q: string): boolean {
   if (!q) return true;
   if (beer.name.toLowerCase().includes(q)) return true;
-  if (beer.brewery.toLowerCase().includes(q)) return true;
+  if (beer.brewery && beer.brewery.toLowerCase().includes(q)) return true;
   if (beer.style && beer.style.toLowerCase().includes(q)) return true;
   if (beer.description && beer.description.toLowerCase().includes(q)) return true;
   return false;
@@ -79,7 +108,7 @@ function matchesSearch(beer: Beer, q: string): boolean {
 function matchedOnlyDescription(beer: Beer, q: string): boolean {
   if (!q || !beer.description) return false;
   const inName = beer.name.toLowerCase().includes(q);
-  const inBrewery = beer.brewery.toLowerCase().includes(q);
+  const inBrewery = !!beer.brewery && beer.brewery.toLowerCase().includes(q);
   const inStyle = !!beer.style && beer.style.toLowerCase().includes(q);
   if (inName || inBrewery || inStyle) return false;
   return beer.description.toLowerCase().includes(q);
@@ -132,8 +161,15 @@ function comparator(sort: SortKey, direction: SortDirection): (a: Beer, b: Beer)
   }
   // 'brewery' — default. Then beer name within a brewery.
   // Both primary and secondary keys reverse together when direction is desc,
-  // matching conventional spreadsheet behavior on multi-column sorts.
+  // matching conventional spreadsheet behavior on multi-column sorts. Null
+  // brewery (ad-hoc beers without one) sorts to the end regardless of
+  // direction, same convention as null ABV.
   return (a, b) => {
+    if (a.brewery === null && b.brewery === null) {
+      return mul * a.name.localeCompare(b.name);
+    }
+    if (a.brewery === null) return 1;
+    if (b.brewery === null) return -1;
     const byBrewery = a.brewery.localeCompare(b.brewery);
     if (byBrewery !== 0) return mul * byBrewery;
     return mul * a.name.localeCompare(b.name);
