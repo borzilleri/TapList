@@ -125,6 +125,22 @@ describe('UserStore mutations + persistence', () => {
     expect(store.get('b1').opinion).toBeNull();
   });
 
+  it('clearing tried status also clears opinion (inverse cascade)', () => {
+    const { store } = freshStore();
+    store.setOpinion('b1', 'liked'); // implicit status=tried
+    store.setStatus('b1', null);
+    expect(store.get('b1').status).toBeNull();
+    expect(store.get('b1').opinion).toBeNull();
+  });
+
+  it('switching from tried to toTry also clears opinion', () => {
+    const { store } = freshStore();
+    store.setOpinion('b1', 'disliked'); // implicit status=tried
+    store.setStatus('b1', 'toTry');
+    expect(store.get('b1').status).toBe('toTry');
+    expect(store.get('b1').opinion).toBeNull();
+  });
+
   it('drops entries when state collapses back to untouched', () => {
     const { store, storage } = freshStore();
     store.setStatus('b1', 'toTry');

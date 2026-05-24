@@ -18,10 +18,19 @@ import {
  * Apply a status change. Tri-state semantics: setting either value clears
  * the other implicitly (since they're the same field). Setting null
  * clears whatever status was there.
+ *
+ * Inverse-cascade: moving AWAY from 'tried' (to null or to 'toTry') also
+ * clears the opinion, since opinion only makes sense on a beer you've
+ * sampled. This is the mirror of `applyOpinion`'s opinion→tried cascade
+ * and keeps the invariant `opinion != null ⇒ status === 'tried'`.
  */
 export function applyStatus(state: BeerUserState, status: BeerStatus): BeerUserState {
   if (state.status === status) return state;
-  return { ...state, status };
+  const next: BeerUserState = { ...state, status };
+  if (state.status === 'tried' && status !== 'tried' && state.opinion !== null) {
+    next.opinion = null;
+  }
+  return next;
 }
 
 /**

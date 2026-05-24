@@ -37,6 +37,62 @@ describe('applyStatus', () => {
     const b = applyStatus(a, 'toTry');
     expect(b).toBe(a);
   });
+
+  describe('inverse cascade (status leaving "tried" clears opinion)', () => {
+    it('clears opinion when status goes tried → null', () => {
+      const withOpinion = {
+        ...startingState(),
+        status: 'tried' as const,
+        opinion: 'liked' as const,
+      };
+      const result = applyStatus(withOpinion, null);
+      expect(result.status).toBeNull();
+      expect(result.opinion).toBeNull();
+    });
+
+    it('clears opinion when status goes tried → toTry', () => {
+      const withOpinion = {
+        ...startingState(),
+        status: 'tried' as const,
+        opinion: 'disliked' as const,
+      };
+      const result = applyStatus(withOpinion, 'toTry');
+      expect(result.status).toBe('toTry');
+      expect(result.opinion).toBeNull();
+    });
+
+    it('preserves opinion when staying at tried (no-op transition)', () => {
+      const withOpinion = {
+        ...startingState(),
+        status: 'tried' as const,
+        opinion: 'liked' as const,
+      };
+      const result = applyStatus(withOpinion, 'tried');
+      expect(result.opinion).toBe('liked');
+    });
+
+    it('preserves opinion when status was never tried (e.g. toTry → null)', () => {
+      // Opinion should not coexist with non-tried status in practice (the
+      // applyOpinion cascade enforces that), but the storage parser could
+      // theoretically produce one. The inverse cascade only triggers when
+      // we're actually leaving 'tried'.
+      const oddState = { ...startingState(), status: 'toTry' as const, opinion: 'liked' as const };
+      const result = applyStatus(oddState, null);
+      expect(result.opinion).toBe('liked');
+    });
+
+    it('does not touch notes or notPresent when clearing opinion', () => {
+      const initial = {
+        status: 'tried' as const,
+        opinion: 'liked' as const,
+        notes: 'tasty',
+        notPresent: true,
+      };
+      const result = applyStatus(initial, null);
+      expect(result.notes).toBe('tasty');
+      expect(result.notPresent).toBe(true);
+    });
+  });
 });
 
 describe('applyOpinion', () => {
