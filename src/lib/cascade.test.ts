@@ -157,11 +157,50 @@ describe('applyNotPresent', () => {
     expect(applyNotPresent(startingState(), true).notPresent).toBe(true);
   });
 
-  it('does not affect other fields', () => {
-    const initial = { ...startingState(), status: 'tried' as const, opinion: 'liked' as const };
+  it('clears status, opinion, and notes when set to true', () => {
+    const initial = {
+      ...startingState(),
+      status: 'tried' as const,
+      opinion: 'liked' as const,
+      notes: 'bright citrus',
+    };
     const result = applyNotPresent(initial, true);
-    expect(result.status).toBe('tried');
-    expect(result.opinion).toBe('liked');
+    expect(result.notPresent).toBe(true);
+    expect(result.status).toBeNull();
+    expect(result.opinion).toBeNull();
+    expect(result.notes).toBe('');
+  });
+
+  it('preserves the ad-hoc payload when marking not-present', () => {
+    const initial = {
+      ...startingState(),
+      status: 'tried' as const,
+      adhoc: { name: 'Mystery', brewery: 'Backstage' },
+    };
+    const result = applyNotPresent(initial, true);
+    expect(result.adhoc).toEqual({ name: 'Mystery', brewery: 'Backstage' });
+    expect(result.status).toBeNull();
+  });
+
+  it('does NOT restore prior state when unmarked', () => {
+    // Once cleared by marking not-present, the data is gone — toggling back
+    // gives a clean beer, not the prior status/opinion/notes.
+    const initial = {
+      ...startingState(),
+      status: 'tried' as const,
+      opinion: 'liked' as const,
+    };
+    const marked = applyNotPresent(initial, true);
+    const unmarked = applyNotPresent(marked, false);
+    expect(unmarked.notPresent).toBe(false);
+    expect(unmarked.status).toBeNull();
+    expect(unmarked.opinion).toBeNull();
+  });
+
+  it('is a no-op when setting to the same value', () => {
+    const initial = { ...startingState(), notPresent: true };
+    const result = applyNotPresent(initial, true);
+    expect(result).toBe(initial);
   });
 });
 

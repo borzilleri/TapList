@@ -55,10 +55,24 @@ export function applyNotes(state: BeerUserState, notes: string): BeerUserState {
   return { ...state, notes: clipped };
 }
 
-/** Apply a not-present toggle. */
+/**
+ * Apply a not-present toggle.
+ *
+ * When marking a beer as not-present, status / opinion / notes are
+ * cleared. A beer that isn't at the festival can't have a queue position,
+ * a tasting opinion, or notes about how it tasted — those states only
+ * make sense for present beers. This enforces the invariant
+ * `notPresent === true ⇒ status === null && opinion === null && notes === ''`.
+ *
+ * Unmarking not-present does NOT restore prior state — once cleared, the
+ * user data is gone. The beer comes back as untouched.
+ */
 export function applyNotPresent(state: BeerUserState, notPresent: boolean): BeerUserState {
   if (state.notPresent === notPresent) return state;
-  return { ...state, notPresent };
+  if (notPresent) {
+    return { ...state, notPresent: true, status: null, opinion: null, notes: '' };
+  }
+  return { ...state, notPresent: false };
 }
 
 /** Convenience: a beer's "before" state when the user touches a never-seen beer. */

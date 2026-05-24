@@ -46,8 +46,9 @@
       {/if}
       <span class="status-icons" aria-hidden="false">
         <!--
-          The 'tried' indicator lives in the right-hand cell when status===tried
-          (replacing the to-try star). Showing it here too would be redundant.
+          'tried' and 'not-present' both live in the right-hand cell when
+          active (replacing the to-try star). Showing them here too would
+          be redundant.
         -->
         {#if vm.state.opinion === 'liked'}
           <span class="icon liked" aria-label="Liked" title="Liked">👍</span>
@@ -57,9 +58,6 @@
         {/if}
         {#if hasNotes}
           <span class="icon has-notes" aria-label="Has notes" title="Has notes">📝</span>
-        {/if}
-        {#if vm.state.notPresent}
-          <span class="icon not-present-tag" aria-label="Not present" title="Not present">⊘</span>
         {/if}
       </span>
     </header>
@@ -81,7 +79,23 @@
       </p>
     {/if}
   </button>
-  {#if vm.state.status === 'tried'}
+  {#if vm.state.notPresent}
+    <!--
+      A not-present beer can't be queued, tried, opinioned, or noted (the
+      cascade rule clears those when marking not-present). The right cell
+      shows the 🚫 indicator instead of a toggle to signal the beer is
+      effectively inert from the list view — the only way to "do" anything
+      with it is to open the detail view and unmark it as not-present.
+    -->
+    <div
+      class="not-present-cell"
+      role="img"
+      aria-label="Not at the festival"
+      title="Not at the festival"
+    >
+      <span aria-hidden="true">🚫</span>
+    </div>
+  {:else if vm.state.status === 'tried'}
     <!--
       Once a beer is tried, the right-hand cell becomes a non-interactive
       "tried" indicator. The star toggle no longer makes sense (the user has
@@ -182,8 +196,7 @@
     font-size: 0.95rem;
     line-height: 1;
   }
-  .icon.has-notes,
-  .icon.not-present-tag {
+  .icon.has-notes {
     color: var(--color-text-muted);
   }
 
@@ -246,12 +259,13 @@
   }
 
   /*
-   * Non-interactive sibling of .star — same dimensions so the row layout
-   * stays stable when a beer transitions from to-try (or unset) into tried.
-   * No hover/focus styles; no cursor change; user-select disabled so the
-   * checkmark can't be highlighted by accident.
+   * Non-interactive siblings of .star — same dimensions so the row layout
+   * stays stable when a beer transitions into tried or not-present. No
+   * hover/focus styles; no cursor change; user-select disabled so the
+   * glyph can't be highlighted by accident.
    */
-  .tried-cell {
+  .tried-cell,
+  .not-present-cell {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
@@ -260,8 +274,15 @@
     width: 3rem;
     font-size: 1.55rem;
     line-height: 1;
+    user-select: none;
+  }
+  .tried-cell {
     color: var(--color-accent);
     font-weight: 700;
-    user-select: none;
+  }
+  .not-present-cell {
+    /* The emoji is full-color on its own — no tint needed. Slight size
+       bump keeps it visually weighted similar to the unicode glyphs. */
+    font-size: 1.4rem;
   }
 </style>

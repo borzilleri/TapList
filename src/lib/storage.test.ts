@@ -142,6 +142,23 @@ describe('parseUserData', () => {
     expect(parsed.beers.a.notes.length).toBe(280);
   });
 
+  it('enforces the not-present invariant on read (clears status/opinion/notes)', () => {
+    // Hand-edited or legacy storage might have notPresent=true alongside
+    // active state; the parser strips that to match the runtime invariant.
+    const parsed = parseUserData({
+      version: 1,
+      beers: {
+        a: { status: 'tried', opinion: 'liked', notes: 'tasty', notPresent: true },
+      },
+    });
+    expect(parsed.beers.a).toEqual({
+      status: null,
+      opinion: null,
+      notes: '',
+      notPresent: true,
+    });
+  });
+
   it('preserves ad-hoc beer payloads when valid', () => {
     const parsed = parseUserData({
       version: 1,

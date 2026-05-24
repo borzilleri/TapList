@@ -107,65 +107,73 @@
     {/if}
 
     <section class="actions" aria-label="Your notes on this beer">
-      <div class="action-group" role="group" aria-label="Status">
-        <button
-          type="button"
-          class="action toTry"
-          class:active={state.status === 'toTry'}
-          aria-pressed={state.status === 'toTry'}
-          onclick={() => setStatus('toTry')}
-        >
-          <span class="icon" aria-hidden="true">★</span> To try
-        </button>
-        <button
-          type="button"
-          class="action tried"
-          class:active={state.status === 'tried'}
-          aria-pressed={state.status === 'tried'}
-          onclick={() => setStatus('tried')}
-        >
-          <span class="icon" aria-hidden="true">✓</span> Tried
-        </button>
-      </div>
+      {#if state.notPresent}
+        <p class="not-present-banner" role="status">
+          <span aria-hidden="true">🚫</span>
+          You've marked this as not at the festival. Status, opinion, and notes are disabled until you
+          bring it back.
+        </p>
+      {:else}
+        <div class="action-group" role="group" aria-label="Status">
+          <button
+            type="button"
+            class="action toTry"
+            class:active={state.status === 'toTry'}
+            aria-pressed={state.status === 'toTry'}
+            onclick={() => setStatus('toTry')}
+          >
+            <span class="icon" aria-hidden="true">★</span> To try
+          </button>
+          <button
+            type="button"
+            class="action tried"
+            class:active={state.status === 'tried'}
+            aria-pressed={state.status === 'tried'}
+            onclick={() => setStatus('tried')}
+          >
+            <span class="icon" aria-hidden="true">✓</span> Tried
+          </button>
+        </div>
 
-      <div class="action-group" role="group" aria-label="Opinion">
-        <button
-          type="button"
-          class="action liked"
-          class:active={state.opinion === 'liked'}
-          aria-pressed={state.opinion === 'liked'}
-          onclick={() => setOpinion('liked')}
-        >
-          <span class="icon" aria-hidden="true">👍</span> Liked
-        </button>
-        <button
-          type="button"
-          class="action disliked"
-          class:active={state.opinion === 'disliked'}
-          aria-pressed={state.opinion === 'disliked'}
-          onclick={() => setOpinion('disliked')}
-        >
-          <span class="icon" aria-hidden="true">👎</span> Disliked
-        </button>
-      </div>
+        <div class="action-group" role="group" aria-label="Opinion">
+          <button
+            type="button"
+            class="action liked"
+            class:active={state.opinion === 'liked'}
+            aria-pressed={state.opinion === 'liked'}
+            onclick={() => setOpinion('liked')}
+          >
+            <span class="icon" aria-hidden="true">👍</span> Liked
+          </button>
+          <button
+            type="button"
+            class="action disliked"
+            class:active={state.opinion === 'disliked'}
+            aria-pressed={state.opinion === 'disliked'}
+            onclick={() => setOpinion('disliked')}
+          >
+            <span class="icon" aria-hidden="true">👎</span> Disliked
+          </button>
+        </div>
 
-      <label class="notes">
-        <span class="notes-label">
-          <span>Notes</span>
-          <span class="counter" class:near-limit={notesRemaining <= 20}>
-            {notesRemaining}
+        <label class="notes">
+          <span class="notes-label">
+            <span>Notes</span>
+            <span class="counter" class:near-limit={notesRemaining <= 20}>
+              {notesRemaining}
+            </span>
           </span>
-        </span>
-        <textarea
-          value={state.notes}
-          oninput={onNotesInput}
-          maxlength={NOTES_MAX_LENGTH}
-          rows="3"
-          placeholder="Citrusy, paired well with the smoked cheese…"
-          autocomplete="off"
-          spellcheck="true"
-        ></textarea>
-      </label>
+          <textarea
+            value={state.notes}
+            oninput={onNotesInput}
+            maxlength={NOTES_MAX_LENGTH}
+            rows="3"
+            placeholder="Citrusy, paired well with the smoked cheese…"
+            autocomplete="off"
+            spellcheck="true"
+          ></textarea>
+        </label>
+      {/if}
 
       <label class="not-present-toggle">
         <input type="checkbox" checked={state.notPresent} onchange={toggleNotPresent} />
@@ -362,6 +370,19 @@
   .notes textarea:focus {
     outline: 2px solid var(--color-accent);
     outline-offset: -1px;
+  }
+
+  .not-present-banner {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    background: var(--color-accent-bg);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-text);
   }
 
   .not-present-toggle {

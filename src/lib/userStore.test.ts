@@ -165,11 +165,31 @@ describe('UserStore mutations + persistence', () => {
     expect(readPersisted(storage)?.beers?.b1?.notes.length).toBe(280);
   });
 
-  it('notPresent toggles independently of other state', () => {
+  it('notPresent toggles to true on an empty beer', () => {
     const { store } = freshStore();
     store.setNotPresent('b1', true);
     expect(store.get('b1').notPresent).toBe(true);
     expect(store.get('b1').status).toBeNull();
+  });
+
+  it('marking not-present clears status, opinion, and notes (cascade)', () => {
+    const { store, storage } = freshStore();
+    store.setStatus('b1', 'tried');
+    store.setOpinion('b1', 'liked');
+    store.setNotes('b1', 'memorable');
+    store.setNotPresent('b1', true);
+    const state = store.get('b1');
+    expect(state.notPresent).toBe(true);
+    expect(state.status).toBeNull();
+    expect(state.opinion).toBeNull();
+    expect(state.notes).toBe('');
+    // Persisted to storage too.
+    expect(readPersisted(storage)?.beers?.b1).toEqual({
+      status: null,
+      opinion: null,
+      notes: '',
+      notPresent: true,
+    });
   });
 });
 

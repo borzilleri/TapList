@@ -115,6 +115,12 @@ Plain text, hard cap of 280 characters (Twitter-sized). One notes blob per beer.
 
 Boolean. Marks a beer as "not at the festival after all." Hides the beer from default views.
 
+**Cascading clear.** Marking a beer as not-present **clears status, opinion, and notes** in the same write. The rationale is that a beer that isn't at the festival can't meaningfully have a queue position, a tasting opinion, or tasting notes. This enforces the invariant `notPresent === true ⇒ status === null && opinion === null && notes === ''`. The storage parser also enforces this on read, so hand-edited localStorage that violates the invariant is normalized.
+
+**Disabled controls.** While a beer is not-present, the detail view hides the status / opinion / notes controls and shows an explanatory banner instead. The not-present toggle remains so the user can un-mark the beer. Unmarking does _not_ restore the previously-cleared state — once cleared, it's gone.
+
+**Row indicator.** In the list view, not-present beers (when revealed via the "Show not-present beers" toggle in settings) show a 🚫 indicator in the right-hand cell — the same slot the to-try star and tried checkmark occupy on present beers — making clear that no row-level action is possible.
+
 ### Ad-hoc beers
 
 The user can add a beer that isn't in the dataset (e.g., a last-minute substitution).
