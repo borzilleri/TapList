@@ -177,12 +177,12 @@ describe('parseBool (lenient)', () => {
 });
 
 describe('parseOpinion (lenient)', () => {
-  for (const liked of ['liked', 'LIKED', 'like', '+', 'thumbs up', ' Liked ']) {
+  for (const liked of ['liked', 'LIKED', 'like', 'yes', 'Yes', '+', 'thumbs up', ' Liked ']) {
     it(`treats ${JSON.stringify(liked)} as liked`, () => {
       expect(parseOpinion(liked)).toBe('liked');
     });
   }
-  for (const disliked of ['disliked', 'dislike', '-', 'thumbs down']) {
+  for (const disliked of ['disliked', 'dislike', 'no', 'NO', '-', 'thumbs down']) {
     it(`treats ${JSON.stringify(disliked)} as disliked`, () => {
       expect(parseOpinion(disliked)).toBe('disliked');
     });

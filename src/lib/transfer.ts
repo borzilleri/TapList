@@ -246,8 +246,8 @@ export function parseBool(raw: string | undefined): boolean {
   return TRUTHY.has(raw.trim().toLowerCase());
 }
 
-const LIKED_ALIASES = new Set(['liked', 'like', '+', 'thumbs up']);
-const DISLIKED_ALIASES = new Set(['disliked', 'dislike', '-', 'thumbs down']);
+const LIKED_ALIASES = new Set(['liked', 'like', 'yes', '+', 'thumbs up']);
+const DISLIKED_ALIASES = new Set(['disliked', 'dislike', 'no', '-', 'thumbs down']);
 
 export function parseOpinion(raw: string | undefined): 'liked' | 'disliked' | null {
   if (raw === undefined) return null;
