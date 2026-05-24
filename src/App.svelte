@@ -1,13 +1,27 @@
 <script lang="ts">
   import type { Beer, Dataset } from './lib/types';
   import { loadActiveDataset } from './lib/data';
+  import { createUserStore } from './lib/userStore.svelte';
   import BeerList from './components/BeerList.svelte';
   import BeerDetail from './components/BeerDetail.svelte';
   import FreshnessIndicator from './components/FreshnessIndicator.svelte';
 
-  // Async load state for the catalog/dataset fetch. Using a Promise here so
-  // we can let Svelte's {#await} block handle the loading/error UX uniformly.
-  let loadPromise = $state(loadActiveDataset());
+  // One shared user-data store, persisted to localStorage. Activated below
+  // once the dataset loads (the store namespaces storage by dataset id).
+  const userStore = createUserStore(window.localStorage);
+
+  /**
+   * Load the catalog + dataset, then activate the user store for that
+   * dataset's id. Returns the dataset so the template can render it.
+   */
+  async function loadAndActivate(): Promise<Dataset> {
+    const result = await loadActiveDataset();
+    userStore.activate(result.dataset.id);
+    return result.dataset;
+  }
+
+  // Promise so {#await} can drive the loading/error UX.
+  let loadPromise = $state(loadAndActivate());
 
   let selectedBeerId = $state<string | null>(null);
 
@@ -16,29 +30,29 @@
   }
 
   function retry() {
-    loadPromise = loadActiveDataset();
+    loadPromise = loadAndActivate();
   }
 </script>
 
 <header class="app-header">
   <h1>TapList</h1>
-  {#await loadPromise then result}
-    {#if result.dataset.festival}
-      <p class="subtitle">{result.dataset.festival}</p>
+  {#await loadPromise then dataset}
+    {#if dataset.festival}
+      <p class="subtitle">{dataset.festival}</p>
     {/if}
-    <FreshnessIndicator updatedAt={result.dataset.updatedAt} />
+    <FreshnessIndicator updatedAt={dataset.updatedAt} />
   {/await}
 </header>
 
 <main>
   {#await loadPromise}
     <p class="status">Loading the beer list…</p>
-  {:then result}
-    <BeerList beers={result.dataset.beers} onSelect={(id) => (selectedBeerId = id)} />
+  {:then dataset}
+    <BeerList beers={dataset.beers} store={userStore} onSelect={(id) => (selectedBeerId = id)} />
     {#if selectedBeerId}
-      {@const beer = findBeer(result.dataset, selectedBeerId)}
+      {@const beer = findBeer(dataset, selectedBeerId)}
       {#if beer}
-        <BeerDetail {beer} onClose={() => (selectedBeerId = null)} />
+        <BeerDetail {beer} store={userStore} onClose={() => (selectedBeerId = null)} />
       {/if}
     {/if}
   {:catch error}

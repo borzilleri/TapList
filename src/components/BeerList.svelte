@@ -1,21 +1,40 @@
 <script lang="ts">
   import type { Beer, FilterMode, SortDirection, SortKey } from '../lib/types';
+  import type { UserStore } from '../lib/userStore.svelte';
   import { buildRows } from '../lib/list';
   import BeerRow from './BeerRow.svelte';
 
   interface Props {
     beers: Beer[];
+    store: UserStore;
     onSelect: (id: string) => void;
   }
 
-  const { beers, onSelect }: Props = $props();
+  const { beers, store, onSelect }: Props = $props();
 
   let search = $state('');
   let sort = $state<SortKey>('brewery');
   let sortDirection = $state<SortDirection>('asc');
   let filter = $state<FilterMode>('all');
+  // Show-not-present toggle UI lands in slice 3 (settings panel). For now
+  // not-present beers are unconditionally hidden — there's no in-app way to
+  // mark a beer not-present yet anyway (that's in the detail view, also in
+  // this slice, so by end of this slice you'd need slice 3 to see them).
+  const showNotPresent = false;
 
-  const rows = $derived(buildRows(beers, search, filter, sort, sortDirection));
+  const rows = $derived(
+    buildRows(beers, store.all, {
+      search,
+      filter,
+      sort,
+      direction: sortDirection,
+      showNotPresent,
+    }),
+  );
+
+  function onToggleToTry(beerId: string) {
+    store.toggleToTry(beerId);
+  }
 
   // Reset direction to ascending whenever the user picks a different sort key.
   // This matches the conventional spreadsheet pattern and avoids stale "desc"
@@ -110,7 +129,7 @@
   {:else}
     <ul class="rows">
       {#each rows as vm (vm.beer.id)}
-        <li><BeerRow {vm} {onSelect} /></li>
+        <li><BeerRow {vm} {onSelect} {onToggleToTry} /></li>
       {/each}
     </ul>
     <p class="count">
