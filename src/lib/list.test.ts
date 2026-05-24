@@ -315,13 +315,15 @@ describe('mergeBeers (dataset + ad-hoc)', () => {
     expect(adhoc.style).toBe('Sour');
   });
 
-  it('fills missing ad-hoc fields with null on the Beer projection', () => {
-    const data = userData({ 'adhoc-1': { adhoc: { name: 'Bare Bones' } } });
+  it('fills missing optional ad-hoc fields with null on the Beer projection', () => {
+    const data = userData({
+      'adhoc-1': { adhoc: { name: 'Bare Bones', brewery: 'Tiny Brew' } },
+    });
     const merged = mergeBeers([], data);
     expect(merged[0]).toEqual({
       id: 'adhoc-1',
       name: 'Bare Bones',
-      brewery: null,
+      brewery: 'Tiny Brew',
       abv: null,
       style: null,
       location: null,
@@ -332,39 +334,9 @@ describe('mergeBeers (dataset + ad-hoc)', () => {
   it('skips userData entries that lack an adhoc payload (status-only beers)', () => {
     const data = userData({
       real: { status: 'toTry' },
-      'adhoc-1': { adhoc: { name: 'A' } },
+      'adhoc-1': { adhoc: { name: 'A', brewery: 'B' } },
     });
     const merged = mergeBeers([], data);
     expect(merged.map((b) => b.id)).toEqual(['adhoc-1']);
-  });
-});
-
-describe('buildRows — null brewery handling', () => {
-  it('searches do not match a null brewery (vs throwing)', () => {
-    const beers = [beer({ id: 'a', brewery: null, name: 'unique' })];
-    const rows = buildRows(beers, emptyUserData(), opts({ search: 'something' }));
-    expect(rows).toHaveLength(0);
-  });
-
-  it('matches by name even when brewery is null', () => {
-    const beers = [beer({ id: 'a', brewery: null, name: 'Mystery' })];
-    const rows = buildRows(beers, emptyUserData(), opts({ search: 'mystery' }));
-    expect(rows.map((r) => r.beer.id)).toEqual(['a']);
-  });
-
-  it('sorts beers with null brewery to the end (asc and desc)', () => {
-    const beers = [
-      beer({ id: 'nope', brewery: null, name: 'Anon' }),
-      beer({ id: 'a', brewery: 'Alpha', name: 'A' }),
-      beer({ id: 'b', brewery: 'Bravo', name: 'B' }),
-    ];
-    const asc = buildRows(beers, emptyUserData(), opts({ sort: 'brewery' })).map((r) => r.beer.id);
-    expect(asc).toEqual(['a', 'b', 'nope']);
-    const desc = buildRows(
-      beers,
-      emptyUserData(),
-      opts({ sort: 'brewery', direction: 'desc' }),
-    ).map((r) => r.beer.id);
-    expect(desc).toEqual(['b', 'a', 'nope']);
   });
 });

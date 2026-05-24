@@ -215,7 +215,7 @@ describe('UserStore ad-hoc beers', () => {
 
     it('starts user state at defaults (not touched yet beyond being adhoc)', () => {
       const { store } = freshStore();
-      const id = store.addAdhoc({ name: 'Mystery' });
+      const id = store.addAdhoc({ name: 'Mystery', brewery: 'Backstage' });
       const state = store.get(id);
       expect(state.status).toBeNull();
       expect(state.opinion).toBeNull();
@@ -225,8 +225,8 @@ describe('UserStore ad-hoc beers', () => {
 
     it('produces distinct ids when added in sequence', () => {
       const { store } = freshStore();
-      const a = store.addAdhoc({ name: 'A' });
-      const b = store.addAdhoc({ name: 'B' });
+      const a = store.addAdhoc({ name: 'A', brewery: 'Brew' });
+      const b = store.addAdhoc({ name: 'B', brewery: 'Brew' });
       expect(a).not.toBe(b);
       expect(store.get(a).adhoc?.name).toBe('A');
       expect(store.get(b).adhoc?.name).toBe('B');
@@ -249,7 +249,7 @@ describe('UserStore ad-hoc beers', () => {
     it('does nothing on dataset (non-adhoc) ids', () => {
       const { store } = freshStore();
       store.setStatus('wbf26-0001', 'toTry');
-      store.updateAdhoc('wbf26-0001', { name: 'Should not apply' });
+      store.updateAdhoc('wbf26-0001', { name: 'Should not apply', brewery: 'X' });
       expect(store.get('wbf26-0001').adhoc).toBeUndefined();
     });
   });
@@ -257,7 +257,7 @@ describe('UserStore ad-hoc beers', () => {
   describe('deleteAdhoc', () => {
     it('removes the ad-hoc beer entirely', () => {
       const { store, storage } = freshStore();
-      const id = store.addAdhoc({ name: 'Mystery' });
+      const id = store.addAdhoc({ name: 'Mystery', brewery: 'Backstage' });
       expect(readPersisted(storage)?.beers?.[id]).toBeDefined();
       store.deleteAdhoc(id);
       expect(readPersisted(storage)?.beers?.[id]).toBeUndefined();
@@ -273,7 +273,7 @@ describe('UserStore ad-hoc beers', () => {
 
     it('ignores unknown ids', () => {
       const { store } = freshStore();
-      store.addAdhoc({ name: 'A' });
+      store.addAdhoc({ name: 'A', brewery: 'Brew' });
       const beforeCount = Object.keys(store.all.beers).length;
       store.deleteAdhoc(generateAdhocId());
       expect(Object.keys(store.all.beers).length).toBe(beforeCount);

@@ -79,9 +79,7 @@
       <button class="close" type="button" onclick={onClose} aria-label="Close">×</button>
     </header>
 
-    {#if beer.brewery}
-      <p class="brewery">{beer.brewery}</p>
-    {/if}
+    <p class="brewery">{beer.brewery}</p>
 
     <dl class="meta">
       {#if beer.abv !== null}

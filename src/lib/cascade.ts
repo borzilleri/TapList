@@ -93,12 +93,15 @@ export function applyAdhocEdit(state: BeerUserState, payload: AdhocBeerPayload):
 
 /**
  * Trim string fields and normalize empty optional values to undefined so
- * round-tripping through storage produces a stable shape.
+ * round-tripping through storage produces a stable shape. `name` and
+ * `brewery` are required; the form is the validation boundary, so we
+ * trust them to be non-empty after trim.
  */
 function sanitizeAdhocPayload(payload: AdhocBeerPayload): AdhocBeerPayload {
-  const result: AdhocBeerPayload = { name: payload.name.trim() };
-  const brewery = payload.brewery?.trim();
-  if (brewery) result.brewery = brewery;
+  const result: AdhocBeerPayload = {
+    name: payload.name.trim(),
+    brewery: payload.brewery.trim(),
+  };
   if (typeof payload.abv === 'number' && Number.isFinite(payload.abv)) {
     result.abv = payload.abv;
   } else if (payload.abv === null) {

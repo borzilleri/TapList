@@ -63,9 +63,7 @@
         {/if}
       </span>
     </header>
-    {#if vm.beer.brewery}
-      <p class="brewery">{vm.beer.brewery}</p>
-    {/if}
+    <p class="brewery">{vm.beer.brewery}</p>
     <div class="secondary">
       {#if vm.beer.abv !== null}
         <span class="abv">{vm.beer.abv.toFixed(1)}%</span>

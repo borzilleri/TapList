@@ -187,6 +187,23 @@ describe('parseUserData', () => {
     expect(parsed.beers['adhoc-1'].status).toBe('tried');
   });
 
+  it('drops invalid ad-hoc payloads (missing brewery) but keeps user state', () => {
+    const parsed = parseUserData({
+      version: 1,
+      beers: {
+        'adhoc-1': {
+          status: 'tried',
+          opinion: null,
+          notes: '',
+          notPresent: false,
+          adhoc: { name: 'Just a name, no brewery' },
+        },
+      },
+    });
+    expect(parsed.beers['adhoc-1'].adhoc).toBeUndefined();
+    expect(parsed.beers['adhoc-1'].status).toBe('tried');
+  });
+
   it('preserves null ABV on ad-hoc beers (intentional unknown)', () => {
     const parsed = parseUserData({
       version: 1,
@@ -196,11 +213,15 @@ describe('parseUserData', () => {
           opinion: null,
           notes: 'note',
           notPresent: false,
-          adhoc: { name: 'Mystery', abv: null },
+          adhoc: { name: 'Mystery', brewery: 'Some Brew', abv: null },
         },
       },
     });
-    expect(parsed.beers['adhoc-1'].adhoc).toEqual({ name: 'Mystery', abv: null });
+    expect(parsed.beers['adhoc-1'].adhoc).toEqual({
+      name: 'Mystery',
+      brewery: 'Some Brew',
+      abv: null,
+    });
   });
 });
 
@@ -229,7 +250,7 @@ describe('isBeerTouched', () => {
     expect(
       isBeerTouched({
         ...EMPTY_BEER_USER_STATE,
-        adhoc: { name: 'Mystery' },
+        adhoc: { name: 'Mystery', brewery: 'Backstage' },
       }),
     ).toBe(true);
   });

@@ -33,12 +33,7 @@ export interface Catalog {
 export interface Beer {
   id: string;
   name: string;
-  /**
-   * Brewery name. Required on dataset beers (validation drops rows that
-   * lack one). Null only for ad-hoc beers that the user added without a
-   * brewery, which the spec allows.
-   */
-  brewery: string | null;
+  brewery: string;
   abv: number | null;
   style: string | null;
   location: string | null;
@@ -73,7 +68,7 @@ export type Opinion = 'liked' | 'disliked' | null;
  */
 export interface AdhocBeerPayload {
   name: string;
-  brewery?: string;
+  brewery: string;
   abv?: number | null;
   style?: string;
   location?: string;

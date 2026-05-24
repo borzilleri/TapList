@@ -181,14 +181,14 @@ A beer is "touched" — and therefore included in CSV export — if **any** of t
 
 When a beer is ad-hoc, its record carries an `adhoc` object holding the source-beer fields (since the beer isn't in the dataset). The id of an ad-hoc beer is locally generated and prefixed `adhoc-`.
 
-| Field         | Type   | Required | Notes |
-| ------------- | ------ | -------- | ----- |
-| `name`        | string | yes      |       |
-| `brewery`     | string | no       |       |
-| `abv`         | number | no       |       |
-| `style`       | string | no       |       |
-| `location`    | string | no       |       |
-| `description` | string | no       |       |
+| Field         | Type   | Required | Notes                                                                                      |
+| ------------- | ------ | -------- | ------------------------------------------------------------------------------------------ |
+| `name`        | string | yes      |                                                                                            |
+| `brewery`     | string | yes      | Required — at a festival, the brewery is what the user is most likely to know on the spot. |
+| `abv`         | number | no       |                                                                                            |
+| `style`       | string | no       |                                                                                            |
+| `location`    | string | no       |                                                                                            |
+| `description` | string | no       |                                                                                            |
 
 ### Versioning
 

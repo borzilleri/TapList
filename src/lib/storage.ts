@@ -128,9 +128,12 @@ function parseNotes(value: unknown): string {
 function parseAdhoc(value: unknown): AdhocBeerPayload | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const a = value as Record<string, unknown>;
+  // name and brewery are both required; missing either invalidates the
+  // payload (the entry might still have user state, which parseBeerState
+  // preserves separately).
   if (typeof a.name !== 'string' || a.name.length === 0) return undefined;
-  const result: AdhocBeerPayload = { name: a.name };
-  if (typeof a.brewery === 'string') result.brewery = a.brewery;
+  if (typeof a.brewery !== 'string' || a.brewery.length === 0) return undefined;
+  const result: AdhocBeerPayload = { name: a.name, brewery: a.brewery };
   if (typeof a.abv === 'number' && Number.isFinite(a.abv)) result.abv = a.abv;
   else if (a.abv === null) result.abv = null;
   if (typeof a.style === 'string') result.style = a.style;

@@ -205,28 +205,28 @@ describe('startingAdhocState', () => {
   it('drops empty optional strings', () => {
     const state = startingAdhocState({
       name: 'Mystery',
-      brewery: '',
+      brewery: 'Backstage',
       style: '   ',
       location: '',
       description: '',
     });
-    expect(state.adhoc).toEqual({ name: 'Mystery' });
+    expect(state.adhoc).toEqual({ name: 'Mystery', brewery: 'Backstage' });
   });
 
   it('preserves explicit null ABV (intentional unknown)', () => {
-    const state = startingAdhocState({ name: 'Mystery', abv: null });
+    const state = startingAdhocState({ name: 'Mystery', brewery: 'Backstage', abv: null });
     expect(state.adhoc?.abv).toBeNull();
   });
 
   it('drops non-finite ABV (NaN/Infinity treated as unknown)', () => {
-    const state = startingAdhocState({ name: 'Mystery', abv: Number.NaN });
+    const state = startingAdhocState({ name: 'Mystery', brewery: 'Backstage', abv: Number.NaN });
     expect(state.adhoc?.abv).toBeUndefined();
   });
 });
 
 describe('applyAdhocEdit', () => {
   it('updates the ad-hoc payload but leaves user state alone', () => {
-    const initial = startingAdhocState({ name: 'Old name' });
+    const initial = startingAdhocState({ name: 'Old name', brewery: 'Old brew' });
     const withState = { ...initial, status: 'tried' as const, notes: 'great' };
     const result = applyAdhocEdit(withState, { name: 'New name', brewery: 'NewBrew' });
     expect(result.adhoc).toEqual({ name: 'New name', brewery: 'NewBrew' });
@@ -236,7 +236,7 @@ describe('applyAdhocEdit', () => {
 
   it('is a no-op on dataset beers (no adhoc payload)', () => {
     const datasetBeer = startingState();
-    const result = applyAdhocEdit(datasetBeer, { name: 'Should not apply' });
+    const result = applyAdhocEdit(datasetBeer, { name: 'Should not apply', brewery: 'X' });
     expect(result).toBe(datasetBeer);
     expect(result.adhoc).toBeUndefined();
   });

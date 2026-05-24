@@ -38,6 +38,7 @@
   let description = $state(initial?.description ?? '');
 
   let nameError = $state<string | null>(null);
+  let breweryError = $state<string | null>(null);
   let abvError = $state<string | null>(null);
 
   function onKeydown(e: KeyboardEvent) {
@@ -46,11 +47,18 @@
 
   function validate(): AdhocBeerPayload | null {
     nameError = null;
+    breweryError = null;
     abvError = null;
     const trimmedName = name.trim();
+    const trimmedBrewery = brewery.trim();
+    let ok = true;
     if (!trimmedName) {
       nameError = 'Name is required.';
-      return null;
+      ok = false;
+    }
+    if (!trimmedBrewery) {
+      breweryError = 'Brewery is required.';
+      ok = false;
     }
     let abv: number | null | undefined = undefined;
     const abvTrim = abvText.trim();
@@ -60,12 +68,13 @@
       const parsed = Number(cleaned);
       if (!Number.isFinite(parsed)) {
         abvError = "Couldn't read that as a number. Leave blank if you don't know.";
-        return null;
+        ok = false;
+      } else {
+        abv = parsed;
       }
-      abv = parsed;
     }
-    const payload: AdhocBeerPayload = { name: trimmedName };
-    if (brewery.trim()) payload.brewery = brewery.trim();
+    if (!ok) return null;
+    const payload: AdhocBeerPayload = { name: trimmedName, brewery: trimmedBrewery };
     if (abv !== undefined) payload.abv = abv;
     if (style.trim()) payload.style = style.trim();
     if (location.trim()) payload.location = location.trim();
@@ -122,14 +131,19 @@
     </label>
 
     <label class="field">
-      <span class="field-label">Brewery</span>
+      <span class="field-label">
+        Brewery <span class="required">*</span>
+      </span>
       <input
         type="text"
         bind:value={brewery}
         placeholder="Backstage Brewing"
         autocomplete="off"
         autocapitalize="words"
+        required
+        aria-invalid={breweryError !== null}
       />
+      {#if breweryError}<span class="field-error">{breweryError}</span>{/if}
     </label>
 
     <div class="field-row">
