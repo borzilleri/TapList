@@ -96,6 +96,19 @@ export const EMPTY_BEER_USER_STATE: Readonly<BeerUserState> = Object.freeze({
   notPresent: false,
 });
 
+// --- App-wide settings (persisted to localStorage) ---
+
+/**
+ * Settings that apply across the whole app (not per-dataset). Persisted
+ * to localStorage under `taplist:settings`. Versioned for future
+ * migrations.
+ */
+export interface AppSettings {
+  version: 1;
+  /** When true, beers the user has marked notPresent are visible in the list. */
+  showNotPresent: boolean;
+}
+
 // --- View model: sort/filter/search state for the list view ---
 
 export type SortKey = 'brewery' | 'name' | 'abv';

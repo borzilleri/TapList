@@ -2,6 +2,7 @@
   import type { AdhocBeerPayload, Beer, Dataset } from './lib/types';
   import { loadActiveDataset } from './lib/data';
   import { createUserStore } from './lib/userStore.svelte';
+  import { createSettingsStore } from './lib/settingsStore.svelte';
   import BeerList from './components/BeerList.svelte';
   import BeerDetail from './components/BeerDetail.svelte';
   import FreshnessIndicator from './components/FreshnessIndicator.svelte';
@@ -12,6 +13,10 @@
   // One shared user-data store, persisted to localStorage. Activated below
   // once the dataset loads (the store namespaces storage by dataset id).
   const userStore = createUserStore(window.localStorage);
+
+  // App-wide settings (theme, show-not-present, future dataset selection).
+  // Hydrated immediately — settings are global, not per-dataset.
+  const settingsStore = createSettingsStore(window.localStorage);
 
   /**
    * Load the catalog + dataset, then activate the user store for that
@@ -28,7 +33,6 @@
 
   let selectedBeerId = $state<string | null>(null);
   let settingsOpen = $state(false);
-  let showNotPresent = $state(false);
   // null = closed; 'create' = new beer; { id, payload } = editing an existing one.
   let adhocForm = $state<null | 'create' | { id: string; payload: AdhocBeerPayload }>(null);
 
@@ -112,7 +116,7 @@
     <BeerList
       beers={dataset.beers}
       store={userStore}
-      {showNotPresent}
+      showNotPresent={settingsStore.showNotPresent}
       onSelect={(id) => (selectedBeerId = id)}
     />
     {#if selectedBeerId}
@@ -142,9 +146,9 @@
 
 {#if settingsOpen}
   <SettingsDrawer
-    {showNotPresent}
+    showNotPresent={settingsStore.showNotPresent}
     onClose={() => (settingsOpen = false)}
-    onToggleShowNotPresent={(next) => (showNotPresent = next)}
+    onToggleShowNotPresent={(next) => settingsStore.setShowNotPresent(next)}
   />
 {/if}
 
