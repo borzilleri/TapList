@@ -3,7 +3,15 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { applyNotPresent, applyNotes, applyOpinion, applyStatus, startingState } from './cascade';
+import {
+  applyAdhocEdit,
+  applyNotPresent,
+  applyNotes,
+  applyOpinion,
+  applyStatus,
+  startingAdhocState,
+  startingState,
+} from './cascade';
 
 describe('applyStatus', () => {
   it('sets the status from null', () => {
@@ -154,5 +162,82 @@ describe('applyNotPresent', () => {
     const result = applyNotPresent(initial, true);
     expect(result.status).toBe('tried');
     expect(result.opinion).toBe('liked');
+  });
+});
+
+describe('startingAdhocState', () => {
+  it('produces a fresh user state with the ad-hoc payload populated', () => {
+    const state = startingAdhocState({
+      name: 'Mystery Sour',
+      brewery: 'Backstage',
+      abv: 4.5,
+      style: 'Sour',
+    });
+    expect(state.status).toBeNull();
+    expect(state.opinion).toBeNull();
+    expect(state.notes).toBe('');
+    expect(state.notPresent).toBe(false);
+    expect(state.adhoc).toEqual({
+      name: 'Mystery Sour',
+      brewery: 'Backstage',
+      abv: 4.5,
+      style: 'Sour',
+    });
+  });
+
+  it('trims whitespace on string fields', () => {
+    const state = startingAdhocState({
+      name: '  Mystery Sour  ',
+      brewery: '  Backstage  ',
+      style: ' Sour ',
+      location: ' Booth 47 ',
+      description: ' Funky, briny. ',
+    });
+    expect(state.adhoc).toEqual({
+      name: 'Mystery Sour',
+      brewery: 'Backstage',
+      style: 'Sour',
+      location: 'Booth 47',
+      description: 'Funky, briny.',
+    });
+  });
+
+  it('drops empty optional strings', () => {
+    const state = startingAdhocState({
+      name: 'Mystery',
+      brewery: '',
+      style: '   ',
+      location: '',
+      description: '',
+    });
+    expect(state.adhoc).toEqual({ name: 'Mystery' });
+  });
+
+  it('preserves explicit null ABV (intentional unknown)', () => {
+    const state = startingAdhocState({ name: 'Mystery', abv: null });
+    expect(state.adhoc?.abv).toBeNull();
+  });
+
+  it('drops non-finite ABV (NaN/Infinity treated as unknown)', () => {
+    const state = startingAdhocState({ name: 'Mystery', abv: Number.NaN });
+    expect(state.adhoc?.abv).toBeUndefined();
+  });
+});
+
+describe('applyAdhocEdit', () => {
+  it('updates the ad-hoc payload but leaves user state alone', () => {
+    const initial = startingAdhocState({ name: 'Old name' });
+    const withState = { ...initial, status: 'tried' as const, notes: 'great' };
+    const result = applyAdhocEdit(withState, { name: 'New name', brewery: 'NewBrew' });
+    expect(result.adhoc).toEqual({ name: 'New name', brewery: 'NewBrew' });
+    expect(result.status).toBe('tried');
+    expect(result.notes).toBe('great');
+  });
+
+  it('is a no-op on dataset beers (no adhoc payload)', () => {
+    const datasetBeer = startingState();
+    const result = applyAdhocEdit(datasetBeer, { name: 'Should not apply' });
+    expect(result).toBe(datasetBeer);
+    expect(result.adhoc).toBeUndefined();
   });
 });

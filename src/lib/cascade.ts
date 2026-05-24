@@ -9,6 +9,7 @@
 import {
   EMPTY_BEER_USER_STATE,
   NOTES_MAX_LENGTH,
+  type AdhocBeerPayload,
   type BeerStatus,
   type BeerUserState,
   type Opinion,
@@ -63,4 +64,51 @@ export function applyNotPresent(state: BeerUserState, notPresent: boolean): Beer
 /** Convenience: a beer's "before" state when the user touches a never-seen beer. */
 export function startingState(): BeerUserState {
   return { ...EMPTY_BEER_USER_STATE };
+}
+
+// --- Ad-hoc beers ------------------------------------------------------------
+
+/**
+ * Build the initial user-data entry for a newly-created ad-hoc beer.
+ * Status / opinion / notes / notPresent all start at their defaults; the
+ * caller can apply further mutations afterward if needed.
+ */
+export function startingAdhocState(payload: AdhocBeerPayload): BeerUserState {
+  return {
+    ...EMPTY_BEER_USER_STATE,
+    adhoc: sanitizeAdhocPayload(payload),
+  };
+}
+
+/**
+ * Apply edits to the ad-hoc payload of an existing beer state. Leaves
+ * status/opinion/notes/notPresent untouched. Returns the same object if
+ * the state isn't ad-hoc (defensive — caller shouldn't invoke for dataset
+ * beers).
+ */
+export function applyAdhocEdit(state: BeerUserState, payload: AdhocBeerPayload): BeerUserState {
+  if (!state.adhoc) return state;
+  return { ...state, adhoc: sanitizeAdhocPayload(payload) };
+}
+
+/**
+ * Trim string fields and normalize empty optional values to undefined so
+ * round-tripping through storage produces a stable shape.
+ */
+function sanitizeAdhocPayload(payload: AdhocBeerPayload): AdhocBeerPayload {
+  const result: AdhocBeerPayload = { name: payload.name.trim() };
+  const brewery = payload.brewery?.trim();
+  if (brewery) result.brewery = brewery;
+  if (typeof payload.abv === 'number' && Number.isFinite(payload.abv)) {
+    result.abv = payload.abv;
+  } else if (payload.abv === null) {
+    result.abv = null;
+  }
+  const style = payload.style?.trim();
+  if (style) result.style = style;
+  const location = payload.location?.trim();
+  if (location) result.location = location;
+  const description = payload.description?.trim();
+  if (description) result.description = description;
+  return result;
 }
