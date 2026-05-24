@@ -6,15 +6,28 @@
     beer: Beer;
     store: UserStore;
     onClose: () => void;
+    onEditAdhoc: (id: string) => void;
+    onDeleteAdhoc: (id: string) => void;
   }
 
-  const { beer, store, onClose }: Props = $props();
+  const { beer, store, onClose, onEditAdhoc, onDeleteAdhoc }: Props = $props();
 
   // Per-beer state — reactive via the store getter.
   const state = $derived(store.get(beer.id));
+  const isAdhoc = $derived(state.adhoc !== undefined);
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
+  }
+
+  function handleDelete() {
+    // Confirmation kept simple — native confirm() reads as urgent on mobile
+    // and we don't have a custom dialog component yet (polish slice).
+    const ok = confirm(
+      `Delete "${beer.name}"? This removes it from your list permanently. ` +
+        `If it's a real beer at the festival, marking it not-present hides it without deleting your data.`,
+    );
+    if (ok) onDeleteAdhoc(beer.id);
   }
 
   // Status buttons are radio-like: tapping the active one clears it.
@@ -66,7 +79,9 @@
       <button class="close" type="button" onclick={onClose} aria-label="Close">×</button>
     </header>
 
-    <p class="brewery">{beer.brewery}</p>
+    {#if beer.brewery}
+      <p class="brewery">{beer.brewery}</p>
+    {/if}
 
     <dl class="meta">
       {#if beer.abv !== null}
@@ -158,6 +173,15 @@
         <input type="checkbox" checked={state.notPresent} onchange={toggleNotPresent} />
         <span>Not at the festival (hide from default views)</span>
       </label>
+
+      {#if isAdhoc}
+        <div class="adhoc-actions" role="group" aria-label="Ad-hoc beer actions">
+          <button type="button" class="adhoc-edit" onclick={() => onEditAdhoc(beer.id)}>
+            Edit details
+          </button>
+          <button type="button" class="adhoc-delete" onclick={handleDelete}>Delete</button>
+        </div>
+      {/if}
     </section>
   </div>
 </div>
@@ -353,5 +377,41 @@
   .not-present-toggle input {
     width: 1.1rem;
     height: 1.1rem;
+  }
+
+  .adhoc-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--color-border);
+  }
+  .adhoc-edit,
+  .adhoc-delete {
+    flex: 1;
+    padding: 0.55rem 0.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .adhoc-delete {
+    color: #b3261e;
+    border-color: color-mix(in oklab, #b3261e 30%, var(--color-border));
+  }
+  @media (hover: hover) {
+    .adhoc-edit:hover {
+      background: var(--color-accent-bg);
+    }
+    .adhoc-delete:hover {
+      background: color-mix(in oklab, #b3261e 8%, var(--color-surface));
+    }
+  }
+  .adhoc-edit:focus-visible,
+  .adhoc-delete:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
   }
 </style>

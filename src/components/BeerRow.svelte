@@ -22,6 +22,7 @@
   });
 
   const hasNotes = $derived(vm.state.notes.length > 0);
+  const isAdhoc = $derived(vm.state.adhoc !== undefined);
 
   // The to-try button doubles as the visual indicator. Its `aria-pressed` and
   // label tell the user what tapping will do, given the current state.
@@ -40,6 +41,9 @@
   <button class="main" type="button" onclick={() => onSelect(vm.beer.id)}>
     <header class="primary">
       <span class="name">{vm.beer.name}</span>
+      {#if isAdhoc}
+        <span class="adhoc-badge" aria-label="User-added beer" title="User-added beer">Ad-hoc</span>
+      {/if}
       <span class="status-icons" aria-hidden="false">
         <!--
           The 'tried' indicator lives in the right-hand cell when status===tried
@@ -59,7 +63,9 @@
         {/if}
       </span>
     </header>
-    <p class="brewery">{vm.beer.brewery}</p>
+    {#if vm.beer.brewery}
+      <p class="brewery">{vm.beer.brewery}</p>
+    {/if}
     <div class="secondary">
       {#if vm.beer.abv !== null}
         <span class="abv">{vm.beer.abv.toFixed(1)}%</span>
@@ -152,6 +158,20 @@
   .row.not-present .name {
     text-decoration: line-through;
     text-decoration-color: var(--color-text-muted);
+  }
+
+  .adhoc-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--color-accent-bg);
+    color: var(--color-accent);
+    line-height: 1.4;
   }
 
   .status-icons {

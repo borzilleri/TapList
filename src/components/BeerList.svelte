@@ -1,29 +1,29 @@
 <script lang="ts">
   import type { Beer, FilterMode, SortDirection, SortKey } from '../lib/types';
   import type { UserStore } from '../lib/userStore.svelte';
-  import { buildRows } from '../lib/list';
+  import { buildRows, mergeBeers } from '../lib/list';
   import BeerRow from './BeerRow.svelte';
 
   interface Props {
     beers: Beer[];
     store: UserStore;
+    showNotPresent: boolean;
     onSelect: (id: string) => void;
   }
 
-  const { beers, store, onSelect }: Props = $props();
+  const { beers, store, showNotPresent, onSelect }: Props = $props();
 
   let search = $state('');
   let sort = $state<SortKey>('brewery');
   let sortDirection = $state<SortDirection>('asc');
   let filter = $state<FilterMode>('all');
-  // Show-not-present toggle UI lands in slice 3 (settings panel). For now
-  // not-present beers are unconditionally hidden — there's no in-app way to
-  // mark a beer not-present yet anyway (that's in the detail view, also in
-  // this slice, so by end of this slice you'd need slice 3 to see them).
-  const showNotPresent = false;
+
+  // Combine dataset beers with the user's ad-hoc additions so both flow
+  // through the same search/sort/filter pipeline.
+  const combined = $derived(mergeBeers(beers, store.all));
 
   const rows = $derived(
-    buildRows(beers, store.all, {
+    buildRows(combined, store.all, {
       search,
       filter,
       sort,
