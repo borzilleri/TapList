@@ -41,9 +41,10 @@
     <header class="primary">
       <span class="name">{vm.beer.name}</span>
       <span class="status-icons" aria-hidden="false">
-        {#if vm.state.status === 'tried'}
-          <span class="icon tried" aria-label="Tried" title="Tried">✓</span>
-        {/if}
+        <!--
+          The 'tried' indicator lives in the right-hand cell when status===tried
+          (replacing the to-try star). Showing it here too would be redundant.
+        -->
         {#if vm.state.opinion === 'liked'}
           <span class="icon liked" aria-label="Liked" title="Liked">👍</span>
         {/if}
@@ -76,16 +77,28 @@
       </p>
     {/if}
   </button>
-  <button
-    class="star"
-    type="button"
-    aria-label={starLabel}
-    title={starLabel}
-    aria-pressed={vm.state.status === 'toTry'}
-    onclick={() => onToggleToTry(vm.beer.id)}
-  >
-    <span aria-hidden="true">{vm.state.status === 'toTry' ? '★' : '☆'}</span>
-  </button>
+  {#if vm.state.status === 'tried'}
+    <!--
+      Once a beer is tried, the right-hand cell becomes a non-interactive
+      "tried" indicator. The star toggle no longer makes sense (the user has
+      already moved past wanting to try this), so it's replaced rather than
+      hidden — keeps the row layout stable.
+    -->
+    <div class="tried-cell" role="img" aria-label="Tried" title="Tried">
+      <span aria-hidden="true">✓</span>
+    </div>
+  {:else}
+    <button
+      class="star"
+      type="button"
+      aria-label={starLabel}
+      title={starLabel}
+      aria-pressed={vm.state.status === 'toTry'}
+      onclick={() => onToggleToTry(vm.beer.id)}
+    >
+      <span aria-hidden="true">{vm.state.status === 'toTry' ? '★' : '☆'}</span>
+    </button>
+  {/if}
 </article>
 
 <style>
@@ -151,10 +164,6 @@
     font-size: 0.95rem;
     line-height: 1;
   }
-  .icon.tried {
-    color: var(--color-accent);
-    font-weight: 700;
-  }
   .icon.has-notes,
   .icon.not-present-tag {
     color: var(--color-text-muted);
@@ -216,5 +225,25 @@
   }
   .star[aria-pressed='true'] {
     color: var(--color-accent);
+  }
+
+  /*
+   * Non-interactive sibling of .star — same dimensions so the row layout
+   * stays stable when a beer transitions from to-try (or unset) into tried.
+   * No hover/focus styles; no cursor change; user-select disabled so the
+   * checkmark can't be highlighted by accident.
+   */
+  .tried-cell {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid var(--color-border);
+    width: 3rem;
+    font-size: 1.55rem;
+    line-height: 1;
+    color: var(--color-accent);
+    font-weight: 700;
+    user-select: none;
   }
 </style>
