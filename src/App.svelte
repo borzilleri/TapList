@@ -3,6 +3,12 @@
   import { loadActiveDataset } from './lib/data';
   import { createUserStore } from './lib/userStore.svelte';
   import { createSettingsStore } from './lib/settingsStore.svelte';
+  import {
+    buildExportFilename,
+    parseImport,
+    serializeExport,
+    type ImportResult,
+  } from './lib/transfer';
   import BeerList from './components/BeerList.svelte';
   import BeerDetail from './components/BeerDetail.svelte';
   import FreshnessIndicator from './components/FreshnessIndicator.svelte';
@@ -35,6 +41,8 @@
   let settingsOpen = $state(false);
   // null = closed; 'create' = new beer; { id, payload } = editing an existing one.
   let adhocForm = $state<null | 'create' | { id: string; payload: AdhocBeerPayload }>(null);
+  // Latest import outcome; shown in the settings drawer until it's reopened.
+  let importStatus = $state<string | null>(null);
 
   /**
    * Resolve the selected beer against the merged dataset+ad-hoc list. We
@@ -75,6 +83,91 @@
     // Detail view was open on this beer; close it since the beer no longer exists.
     if (selectedBeerId === id) selectedBeerId = null;
   }
+
+  async function handleExport() {
+    // We need the dataset to look up source-beer fields for non-ad-hoc
+    // entries. The button is only reachable once the drawer is open, which
+    // is only reachable once the dataset has loaded — but awaiting the
+    // promise here is the cleanest way to type-narrow.
+    const dataset = await loadPromise;
+    const csv = serializeExport({
+      datasetBeers: dataset.beers,
+      userData: userStore.all,
+    });
+    const filename = buildExportFilename(dataset.id);
+    triggerDownload(csv, filename);
+  }
+
+  async function handleImportFile(file: File) {
+    const dataset = await loadPromise;
+    let text: string;
+    try {
+      text = await file.text();
+    } catch (err) {
+      importStatus = `Couldn't read the file: ${err instanceof Error ? err.message : String(err)}`;
+      return;
+    }
+    let result: ImportResult;
+    try {
+      result = parseImport({ csvText: text, datasetBeers: dataset.beers });
+    } catch (err) {
+      importStatus = `Import failed: ${err instanceof Error ? err.message : String(err)}`;
+      return;
+    }
+
+    if (result.applied === 0 && result.droppedUnknownId === 0 && result.droppedInvalid === 0) {
+      importStatus = 'The file was empty — nothing to import.';
+      return;
+    }
+
+    const confirmMsg =
+      `Replace your current ratings, flags, and notes with ${result.applied} ` +
+      `entr${result.applied === 1 ? 'y' : 'ies'} from this file?\n\n` +
+      `This wipes everything you've done in the app so far. ` +
+      `${result.droppedUnknownId > 0 ? `${result.droppedUnknownId} row${result.droppedUnknownId === 1 ? '' : 's'} will be dropped because the beer isn't in the current dataset. ` : ''}` +
+      `${result.droppedInvalid > 0 ? `${result.droppedInvalid} row${result.droppedInvalid === 1 ? '' : 's'} will be dropped as invalid (missing required fields). ` : ''}`;
+    if (!confirm(confirmMsg)) {
+      importStatus = 'Import cancelled.';
+      return;
+    }
+
+    userStore.replaceData(result.userData);
+    // Close any open detail view in case it pointed at a beer that no
+    // longer has state.
+    selectedBeerId = null;
+
+    const parts: string[] = [`Imported ${result.applied}.`];
+    if (result.droppedUnknownId > 0) {
+      parts.push(`${result.droppedUnknownId} dropped (unknown beer).`);
+    }
+    if (result.droppedInvalid > 0) {
+      parts.push(`${result.droppedInvalid} dropped (invalid).`);
+    }
+    importStatus = parts.join(' ');
+  }
+
+  /**
+   * Trigger a browser download of a text blob. Uses the standard
+   * createObjectURL + anchor.click trick.
+   */
+  function triggerDownload(text: string, filename: string) {
+    const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Defer revoke so iOS Safari has a chance to start the download.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function openSettings() {
+    settingsOpen = true;
+    importStatus = null; // fresh open = fresh status line
+  }
 </script>
 
 <header class="app-header">
@@ -95,7 +188,7 @@
         class="header-btn"
         aria-label="Settings"
         title="Settings"
-        onclick={() => (settingsOpen = true)}
+        onclick={openSettings}
       >
         <span aria-hidden="true">⚙</span>
       </button>
@@ -147,8 +240,11 @@
 {#if settingsOpen}
   <SettingsDrawer
     showNotPresent={settingsStore.showNotPresent}
+    {importStatus}
     onClose={() => (settingsOpen = false)}
     onToggleShowNotPresent={(next) => settingsStore.setShowNotPresent(next)}
+    onExport={handleExport}
+    onImportFile={handleImportFile}
   />
 {/if}
 
