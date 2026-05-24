@@ -38,6 +38,6 @@ export default [
   },
   {
     // Don't lint generated or vendored output.
-    ignores: ['dist/', 'node_modules/', '.svelte-kit/', 'coverage/'],
+    ignores: ['dist/', 'node_modules/', '.svelte-kit/', 'coverage/', '.vite/'],
   },
 ];
