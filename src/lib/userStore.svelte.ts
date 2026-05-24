@@ -34,11 +34,41 @@ import {
 
 const ADHOC_ID_PREFIX = 'adhoc-';
 
-/** Stable, locally-generated id for an ad-hoc beer. Uses crypto.randomUUID. */
+/**
+ * Stable, locally-generated id for an ad-hoc beer.
+ *
+ * Prefers crypto.randomUUID when available (every browser since iOS
+ * Safari 15.4 / Chrome 92 / Firefox 95). Falls back to a small RFC-4122
+ * v4 generator built on crypto.getRandomValues for older iOS Safari 14.x
+ * — we don't actually need cryptographic uniqueness here, just collision-
+ * resistance across a single user's session.
+ */
 export function generateAdhocId(): string {
-  // crypto.randomUUID is available on all modern browsers since 2022 and in
-  // node 19+. The build's browserslist targets iOS Safari 14+ which has it.
-  return `${ADHOC_ID_PREFIX}${crypto.randomUUID()}`;
+  return `${ADHOC_ID_PREFIX}${randomUuid()}`;
+}
+
+function randomUuid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback: classic 4-bit-each v4 UUID using crypto.getRandomValues
+  // (available everywhere; even iOS Safari has had it for a decade).
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0'));
+  return (
+    hex.slice(0, 4).join('') +
+    '-' +
+    hex.slice(4, 6).join('') +
+    '-' +
+    hex.slice(6, 8).join('') +
+    '-' +
+    hex.slice(8, 10).join('') +
+    '-' +
+    hex.slice(10, 16).join('')
+  );
 }
 
 export function isAdhocId(id: string): boolean {

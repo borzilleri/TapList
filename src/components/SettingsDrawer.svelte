@@ -16,21 +16,21 @@
 
 <!--
   Drawer pattern: full-height panel sliding in from the right. Backdrop
-  click dismisses. Same a11y pattern as the BeerDetail modal — Escape
-  closes via the window listener, suppressing the a11y warnings we
-  already suppress there.
+  click dismisses (checks `e.target === e.currentTarget` so taps inside
+  the drawer don't bubble up). Escape closes via the window listener.
 -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   class="backdrop"
   role="dialog"
   aria-modal="true"
   aria-labelledby="settings-title"
-  onclick={onClose}
+  onclick={(e) => {
+    if (e.target === e.currentTarget) onClose();
+  }}
   tabindex="-1"
 >
-  <aside class="drawer" onclick={(e) => e.stopPropagation()}>
+  <aside class="drawer">
     <header>
       <h2 id="settings-title">Settings</h2>
       <button class="close" type="button" onclick={onClose} aria-label="Close settings">×</button>

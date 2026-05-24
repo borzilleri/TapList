@@ -41,6 +41,15 @@
   let breweryError = $state<string | null>(null);
   let abvError = $state<string | null>(null);
 
+  // Refs so we can focus the first invalid field on validation failure.
+  // This is the key mobile fix: on a phone, if validation fails for a field
+  // that's scrolled off-screen above the keyboard, the user can't see the
+  // inline error and the submit button looks broken. Focusing the field
+  // scrolls it into view and pops the keyboard back open if needed.
+  let nameInput: HTMLInputElement | undefined = $state();
+  let breweryInput: HTMLInputElement | undefined = $state();
+  let abvInput: HTMLInputElement | undefined = $state();
+
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
   }
@@ -51,14 +60,14 @@
     abvError = null;
     const trimmedName = name.trim();
     const trimmedBrewery = brewery.trim();
-    let ok = true;
+    let firstInvalid: HTMLInputElement | undefined;
     if (!trimmedName) {
       nameError = 'Name is required.';
-      ok = false;
+      firstInvalid ??= nameInput;
     }
     if (!trimmedBrewery) {
       breweryError = 'Brewery is required.';
-      ok = false;
+      firstInvalid ??= breweryInput;
     }
     let abv: number | null | undefined = undefined;
     const abvTrim = abvText.trim();
@@ -68,12 +77,16 @@
       const parsed = Number(cleaned);
       if (!Number.isFinite(parsed)) {
         abvError = "Couldn't read that as a number. Leave blank if you don't know.";
-        ok = false;
+        firstInvalid ??= abvInput;
       } else {
         abv = parsed;
       }
     }
-    if (!ok) return null;
+    if (firstInvalid) {
+      firstInvalid.focus();
+      firstInvalid.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return null;
+    }
     const payload: AdhocBeerPayload = { name: trimmedName, brewery: trimmedBrewery };
     if (abv !== undefined) payload.abv = abv;
     if (style.trim()) payload.style = style.trim();
@@ -92,18 +105,26 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<!-- Same modal pattern as BeerDetail — sheet on mobile, centered on desktop. -->
+<!--
+  Same modal pattern as BeerDetail — sheet on mobile, centered on desktop.
+  The backdrop click handler checks `e.target === e.currentTarget` so a tap
+  inside the form doesn't bubble up and close the modal. This is more
+  robust than putting stopPropagation on the form, which has been known
+  to interact oddly with form submit on iOS Safari. Keyboard equivalent
+  for the close action is the Escape key, handled at the window level.
+-->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   class="backdrop"
   role="dialog"
   aria-modal="true"
   aria-labelledby="adhoc-title"
-  onclick={onClose}
+  onclick={(e) => {
+    if (e.target === e.currentTarget) onClose();
+  }}
   tabindex="-1"
 >
-  <form class="panel" onsubmit={handleSubmit} onclick={(e) => e.stopPropagation()}>
+  <form class="panel" onsubmit={handleSubmit}>
     <header>
       <h2 id="adhoc-title">{isEdit ? 'Edit ad-hoc beer' : 'Add a beer'}</h2>
       <button type="button" class="close" onclick={onClose} aria-label="Close">×</button>
@@ -119,6 +140,7 @@
         Name <span class="required">*</span>
       </span>
       <input
+        bind:this={nameInput}
         type="text"
         bind:value={name}
         placeholder="Mystery Sour"
@@ -135,6 +157,7 @@
         Brewery <span class="required">*</span>
       </span>
       <input
+        bind:this={breweryInput}
         type="text"
         bind:value={brewery}
         placeholder="Backstage Brewing"
@@ -150,6 +173,7 @@
       <label class="field field-flex-2">
         <span class="field-label">ABV (%)</span>
         <input
+          bind:this={abvInput}
           type="text"
           inputmode="decimal"
           bind:value={abvText}

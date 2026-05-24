@@ -59,21 +59,24 @@
 <svelte:window onkeydown={onKeydown} />
 
 <!--
-  Click the backdrop to dismiss. The backdrop is intentionally interactive
-  (click-to-close is a standard modal pattern); the keyboard equivalent is
-  Escape, handled at the window level above.
+  Click the backdrop to dismiss. The backdrop's onclick checks
+  `e.target === e.currentTarget` so taps inside the panel don't trigger
+  it — that's more robust than stopPropagation on the panel (which can
+  interact badly with form submit on iOS Safari). Keyboard equivalent
+  for the close action is the Escape key, handled at the window level.
 -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
   class="backdrop"
   role="dialog"
   aria-modal="true"
   aria-labelledby="detail-title"
-  onclick={onClose}
+  onclick={(e) => {
+    if (e.target === e.currentTarget) onClose();
+  }}
   tabindex="-1"
 >
-  <div class="panel" role="document" onclick={(e) => e.stopPropagation()}>
+  <div class="panel" role="document">
     <header>
       <h2 id="detail-title">{beer.name}</h2>
       <button class="close" type="button" onclick={onClose} aria-label="Close">×</button>
