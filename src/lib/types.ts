@@ -47,6 +47,55 @@ export interface Dataset {
   beers: Beer[];
 }
 
+// --- User data (per-beer state in localStorage) ---
+
+export const NOTES_MAX_LENGTH = 280;
+
+/**
+ * Tri-state user progress on a beer. `null` means neither queued nor tried.
+ * Setting `opinion` to a non-null value implicitly sets `status = 'tried'`
+ * (the cascade lives in the store, not the type).
+ */
+export type BeerStatus = 'toTry' | 'tried' | null;
+
+export type Opinion = 'liked' | 'disliked' | null;
+
+/**
+ * Ad-hoc beers carry the source-beer fields here because they aren't in the
+ * dataset. Slice 2 doesn't create or edit ad-hoc beers but the type lives
+ * here so the storage layer can pass the payload through unchanged for
+ * slice 3.
+ */
+export interface AdhocBeerPayload {
+  name: string;
+  brewery?: string;
+  abv?: number | null;
+  style?: string;
+  location?: string;
+  description?: string;
+}
+
+export interface BeerUserState {
+  status: BeerStatus;
+  opinion: Opinion;
+  notes: string;
+  notPresent: boolean;
+  adhoc?: AdhocBeerPayload;
+}
+
+export interface UserData {
+  version: 1;
+  beers: Record<string, BeerUserState>;
+}
+
+/** The "empty" / default state for any beer the user hasn't touched. */
+export const EMPTY_BEER_USER_STATE: Readonly<BeerUserState> = Object.freeze({
+  status: null,
+  opinion: null,
+  notes: '',
+  notPresent: false,
+});
+
 // --- View model: sort/filter/search state for the list view ---
 
 export type SortKey = 'brewery' | 'name' | 'abv';
@@ -58,4 +107,5 @@ export interface ListViewState {
   sortDirection: SortDirection;
   filter: FilterMode;
   search: string;
+  showNotPresent: boolean;
 }

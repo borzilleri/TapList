@@ -105,6 +105,8 @@ The UI presents two controls (a flag/star for To-try, a check for Tried) that re
 
 Single-select among `liked`, `disliked`, or unset. Optional. **Setting an opinion automatically sets status to Tried** (since opinions only make sense on beers you've sampled), overwriting a To-try state if it was there. Clearing an opinion does _not_ revert status — you still tried it, you just no longer have a recorded opinion.
 
+Conversely, **moving status away from Tried — whether by tapping Tried to clear it or by switching to To-try — also clears any opinion**. Opinion is only meaningful while status is Tried, so the two are linked: the system enforces the invariant that an opinion exists only on a Tried beer. Together with the opinion → tried cascade, this means the user can never end up in an "opinion without tried" state.
+
 ### Notes
 
 Plain text, hard cap of 280 characters (Twitter-sized). One notes blob per beer. The input prevents typing past the limit and shows a remaining-character counter.

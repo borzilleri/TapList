@@ -4,9 +4,10 @@
   interface Props {
     vm: BeerRowVM;
     onSelect: (id: string) => void;
+    onToggleToTry: (id: string) => void;
   }
 
-  const { vm, onSelect }: Props = $props();
+  const { vm, onSelect, onToggleToTry }: Props = $props();
 
   // Split the snippet around the highlight range so we can wrap the match in <mark>.
   // Falls back to null when there's no snippet to render.
@@ -19,64 +20,157 @@
       after: vm.descriptionSnippet.slice(end),
     };
   });
+
+  const hasNotes = $derived(vm.state.notes.length > 0);
+
+  // The to-try button doubles as the visual indicator. Its `aria-pressed` and
+  // label tell the user what tapping will do, given the current state.
+  const starLabel = $derived(
+    vm.state.status === 'toTry'
+      ? `Remove ${vm.beer.name} from your to-try list`
+      : `Add ${vm.beer.name} to your to-try list`,
+  );
 </script>
 
-<button class="row" type="button" onclick={() => onSelect(vm.beer.id)}>
-  <div class="primary">
-    <span class="name">{vm.beer.name}</span>
-    <span class="brewery">{vm.beer.brewery}</span>
-  </div>
-  <div class="secondary">
-    {#if vm.beer.abv !== null}
-      <span class="abv">{vm.beer.abv.toFixed(1)}%</span>
+<article
+  class="row"
+  class:tried={vm.state.status === 'tried'}
+  class:not-present={vm.state.notPresent}
+>
+  <button class="main" type="button" onclick={() => onSelect(vm.beer.id)}>
+    <header class="primary">
+      <span class="name">{vm.beer.name}</span>
+      <span class="status-icons" aria-hidden="false">
+        <!--
+          The 'tried' indicator lives in the right-hand cell when status===tried
+          (replacing the to-try star). Showing it here too would be redundant.
+        -->
+        {#if vm.state.opinion === 'liked'}
+          <span class="icon liked" aria-label="Liked" title="Liked">👍</span>
+        {/if}
+        {#if vm.state.opinion === 'disliked'}
+          <span class="icon disliked" aria-label="Disliked" title="Disliked">👎</span>
+        {/if}
+        {#if hasNotes}
+          <span class="icon has-notes" aria-label="Has notes" title="Has notes">📝</span>
+        {/if}
+        {#if vm.state.notPresent}
+          <span class="icon not-present-tag" aria-label="Not present" title="Not present">⊘</span>
+        {/if}
+      </span>
+    </header>
+    <p class="brewery">{vm.beer.brewery}</p>
+    <div class="secondary">
+      {#if vm.beer.abv !== null}
+        <span class="abv">{vm.beer.abv.toFixed(1)}%</span>
+      {/if}
+      {#if vm.beer.style}
+        <span class="style">{vm.beer.style}</span>
+      {/if}
+      {#if vm.beer.location}
+        <span class="location">{vm.beer.location}</span>
+      {/if}
+    </div>
+    {#if snippetParts}
+      <p class="snippet">
+        {snippetParts.before}<mark>{snippetParts.match}</mark>{snippetParts.after}
+      </p>
     {/if}
-    {#if vm.beer.style}
-      <span class="style">{vm.beer.style}</span>
-    {/if}
-    {#if vm.beer.location}
-      <span class="location">{vm.beer.location}</span>
-    {/if}
-  </div>
-  {#if snippetParts}
-    <p class="snippet">
-      {snippetParts.before}<mark>{snippetParts.match}</mark>{snippetParts.after}
-    </p>
+  </button>
+  {#if vm.state.status === 'tried'}
+    <!--
+      Once a beer is tried, the right-hand cell becomes a non-interactive
+      "tried" indicator. The star toggle no longer makes sense (the user has
+      already moved past wanting to try this), so it's replaced rather than
+      hidden — keeps the row layout stable.
+    -->
+    <div class="tried-cell" role="img" aria-label="Tried" title="Tried">
+      <span aria-hidden="true">✓</span>
+    </div>
+  {:else}
+    <button
+      class="star"
+      type="button"
+      aria-label={starLabel}
+      title={starLabel}
+      aria-pressed={vm.state.status === 'toTry'}
+      onclick={() => onToggleToTry(vm.beer.id)}
+    >
+      <span aria-hidden="true">{vm.state.status === 'toTry' ? '★' : '☆'}</span>
+    </button>
   {/if}
-</button>
+</article>
 
 <style>
   .row {
-    display: block;
-    width: 100%;
-    text-align: left;
+    display: flex;
+    align-items: stretch;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 0.75rem 1rem;
     box-shadow: var(--shadow-sm);
+    overflow: hidden; /* contain child focus rings within the radius */
+  }
+  .row.tried {
+    border-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-border));
+  }
+  .row.not-present {
+    opacity: 0.55;
+  }
+
+  .main {
+    flex: 1 1 auto;
+    min-width: 0; /* allow flex children to truncate if needed */
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 0.75rem 0.75rem 0.75rem 1rem;
+    cursor: pointer;
     transition: background 0.1s ease;
   }
-  .row:hover,
-  .row:focus-visible {
-    background: var(--color-accent-bg);
-    outline: none;
+  @media (hover: hover) {
+    .main:hover {
+      background: var(--color-accent-bg);
+    }
   }
-  .row:focus-visible {
+  .main:focus-visible {
     outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+    outline-offset: -2px;
   }
 
   .primary {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem 0.75rem;
     align-items: baseline;
+    gap: 0.25rem 0.5rem;
+    margin: 0;
   }
   .name {
     font-weight: 600;
     font-size: 1.05rem;
   }
+  .row.not-present .name {
+    text-decoration: line-through;
+    text-decoration-color: var(--color-text-muted);
+  }
+
+  .status-icons {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    margin-left: auto;
+  }
+  .icon {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .icon.has-notes,
+  .icon.not-present-tag {
+    color: var(--color-text-muted);
+  }
+
   .brewery {
+    margin: 0.1rem 0 0;
     color: var(--color-text-muted);
     font-size: 0.95rem;
   }
@@ -100,5 +194,56 @@
     font-size: 0.85rem;
     color: var(--color-text-muted);
     line-height: 1.35;
+  }
+
+  .star {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--color-border);
+    width: 3rem; /* > 44px tap target on mobile */
+    font-size: 1.55rem;
+    line-height: 1;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      background 0.1s ease,
+      color 0.1s ease;
+  }
+  @media (hover: hover) {
+    .star:hover {
+      background: var(--color-accent-bg);
+      color: var(--color-accent);
+    }
+  }
+  .star:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+  .star[aria-pressed='true'] {
+    color: var(--color-accent);
+  }
+
+  /*
+   * Non-interactive sibling of .star — same dimensions so the row layout
+   * stays stable when a beer transitions from to-try (or unset) into tried.
+   * No hover/focus styles; no cursor change; user-select disabled so the
+   * checkmark can't be highlighted by accident.
+   */
+  .tried-cell {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid var(--color-border);
+    width: 3rem;
+    font-size: 1.55rem;
+    line-height: 1;
+    color: var(--color-accent);
+    font-weight: 700;
+    user-select: none;
   }
 </style>

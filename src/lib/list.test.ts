@@ -3,8 +3,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { Beer } from './types';
-import { buildRows } from './list';
+import type { Beer, BeerUserState, UserData } from './types';
+import { buildRows, type BuildRowsOptions } from './list';
+import { emptyUserData } from './storage';
 
 function beer(overrides: Partial<Beer> = {}): Beer {
   return {
@@ -15,6 +16,36 @@ function beer(overrides: Partial<Beer> = {}): Beer {
     style: 'IPA',
     location: 'Booth 1',
     description: null,
+    ...overrides,
+  };
+}
+
+/**
+ * Build a UserData blob from a sparse map of beerId -> partial state.
+ * Tests use this to set up per-beer state without writing the full record.
+ */
+function userData(states: Record<string, Partial<BeerUserState>> = {}): UserData {
+  const beers: Record<string, BeerUserState> = {};
+  for (const [id, partial] of Object.entries(states)) {
+    beers[id] = {
+      status: null,
+      opinion: null,
+      notes: '',
+      notPresent: false,
+      ...partial,
+    };
+  }
+  return { version: 1, beers };
+}
+
+/** Default options — only override what each test cares about. */
+function opts(overrides: Partial<BuildRowsOptions> = {}): BuildRowsOptions {
+  return {
+    search: '',
+    filter: 'all',
+    sort: 'name',
+    direction: 'asc',
+    showNotPresent: false,
     ...overrides,
   };
 }
@@ -33,31 +64,31 @@ describe('buildRows — search', () => {
   ];
 
   it('returns all beers when search is empty', () => {
-    expect(buildRows(beers, '', 'all', 'name')).toHaveLength(3);
+    expect(buildRows(beers, emptyUserData(), opts())).toHaveLength(3);
   });
 
   it('matches case-insensitively in name', () => {
-    const rows = buildRows(beers, 'pils', 'all', 'name');
+    const rows = buildRows(beers, emptyUserData(), opts({ search: 'pils' }));
     expect(rows.map((r) => r.beer.id)).toEqual(['a']);
   });
 
   it('matches in brewery', () => {
-    const rows = buildRows(beers, 'cloudburst', 'all', 'name');
+    const rows = buildRows(beers, emptyUserData(), opts({ search: 'cloudburst' }));
     expect(rows.map((r) => r.beer.id)).toEqual(['b']);
   });
 
   it('matches in style', () => {
-    const rows = buildRows(beers, 'stout', 'all', 'name');
+    const rows = buildRows(beers, emptyUserData(), opts({ search: 'stout' }));
     expect(rows.map((r) => r.beer.id)).toEqual(['c']);
   });
 
   it('matches in description', () => {
-    const rows = buildRows(beers, 'espresso', 'all', 'name');
+    const rows = buildRows(beers, emptyUserData(), opts({ search: 'espresso' }));
     expect(rows.map((r) => r.beer.id)).toEqual(['c']);
   });
 
   it('ignores leading/trailing whitespace', () => {
-    expect(buildRows(beers, '   pils   ', 'all', 'name')).toHaveLength(1);
+    expect(buildRows(beers, emptyUserData(), opts({ search: '   pils   ' }))).toHaveLength(1);
   });
 });
 
@@ -72,24 +103,24 @@ describe('buildRows — snippet extraction (description-only match)', () => {
   });
 
   it('produces a snippet when the match is only in the description', () => {
-    const rows = buildRows([b], 'grapefruit', 'all', 'name');
+    const rows = buildRows([b], emptyUserData(), opts({ search: 'grapefruit' }));
     expect(rows[0].descriptionSnippet).not.toBeNull();
     expect(rows[0].descriptionSnippet).toContain('grapefruit');
     expect(rows[0].highlightRange).not.toBeNull();
   });
 
   it('does not produce a snippet when name also matches', () => {
-    const rows = buildRows([b], 'pale', 'all', 'name');
+    const rows = buildRows([b], emptyUserData(), opts({ search: 'pale' }));
     expect(rows[0].descriptionSnippet).toBeNull();
   });
 
   it('does not produce a snippet when style also matches', () => {
-    const rows = buildRows([b], 'ale', 'all', 'name');
+    const rows = buildRows([b], emptyUserData(), opts({ search: 'ale' }));
     expect(rows[0].descriptionSnippet).toBeNull();
   });
 
   it('highlight range covers the matched substring in the snippet', () => {
-    const rows = buildRows([b], 'biscuit', 'all', 'name');
+    const rows = buildRows([b], emptyUserData(), opts({ search: 'biscuit' }));
     const { descriptionSnippet, highlightRange } = rows[0];
     expect(descriptionSnippet).not.toBeNull();
     expect(highlightRange).not.toBeNull();
@@ -108,42 +139,59 @@ describe('buildRows — sort', () => {
 
   describe('ascending (default)', () => {
     it('sorts by name A-Z', () => {
-      const ids = buildRows(beers, '', 'all', 'name').map((r) => r.beer.id);
+      const ids = buildRows(beers, emptyUserData(), opts({ sort: 'name' })).map((r) => r.beer.id);
       expect(ids).toEqual(['b', 'c', 'd', 'a']);
     });
 
     it('sorts by brewery, then by beer name within brewery', () => {
-      const ids = buildRows(beers, '', 'all', 'brewery').map((r) => r.beer.id);
-      // Alpha (Apple, Pear), Bravo (Mango), Charlie (Zebra)
+      const ids = buildRows(beers, emptyUserData(), opts({ sort: 'brewery' })).map(
+        (r) => r.beer.id,
+      );
       expect(ids).toEqual(['b', 'd', 'c', 'a']);
     });
 
     it('sorts by ABV low to high', () => {
-      const ids = buildRows(beers, '', 'all', 'abv').map((r) => r.beer.id);
+      const ids = buildRows(beers, emptyUserData(), opts({ sort: 'abv' })).map((r) => r.beer.id);
       expect(ids).toEqual(['d', 'a', 'c', 'b']);
     });
 
     it('treats omitted direction as ascending', () => {
-      const explicitAsc = buildRows(beers, '', 'all', 'name', 'asc').map((r) => r.beer.id);
-      const omitted = buildRows(beers, '', 'all', 'name').map((r) => r.beer.id);
+      const explicitAsc = buildRows(
+        beers,
+        emptyUserData(),
+        opts({ sort: 'name', direction: 'asc' }),
+      ).map((r) => r.beer.id);
+      const omitted = buildRows(beers, emptyUserData(), {
+        search: '',
+        filter: 'all',
+        sort: 'name',
+      }).map((r) => r.beer.id);
       expect(explicitAsc).toEqual(omitted);
     });
   });
 
   describe('descending', () => {
     it('sorts by name Z-A', () => {
-      const ids = buildRows(beers, '', 'all', 'name', 'desc').map((r) => r.beer.id);
+      const ids = buildRows(beers, emptyUserData(), opts({ sort: 'name', direction: 'desc' })).map(
+        (r) => r.beer.id,
+      );
       expect(ids).toEqual(['a', 'd', 'c', 'b']);
     });
 
     it('reverses both brewery and within-brewery beer name', () => {
-      const ids = buildRows(beers, '', 'all', 'brewery', 'desc').map((r) => r.beer.id);
+      const ids = buildRows(
+        beers,
+        emptyUserData(),
+        opts({ sort: 'brewery', direction: 'desc' }),
+      ).map((r) => r.beer.id);
       // Charlie (Zebra), Bravo (Mango), Alpha (Pear, Apple)
       expect(ids).toEqual(['a', 'c', 'd', 'b']);
     });
 
     it('sorts by ABV high to low', () => {
-      const ids = buildRows(beers, '', 'all', 'abv', 'desc').map((r) => r.beer.id);
+      const ids = buildRows(beers, emptyUserData(), opts({ sort: 'abv', direction: 'desc' })).map(
+        (r) => r.beer.id,
+      );
       expect(ids).toEqual(['b', 'c', 'a', 'd']);
     });
   });
@@ -156,34 +204,91 @@ describe('buildRows — sort', () => {
     ];
 
     it('sorts missing ABV to the end when ascending', () => {
-      const ids = buildRows(beersWithNull, '', 'all', 'abv', 'asc').map((r) => r.beer.id);
+      const ids = buildRows(
+        beersWithNull,
+        emptyUserData(),
+        opts({ sort: 'abv', direction: 'asc' }),
+      ).map((r) => r.beer.id);
       expect(ids).toEqual(['y', 'z', 'x']);
     });
 
     it('still sorts missing ABV to the end when descending', () => {
-      const ids = buildRows(beersWithNull, '', 'all', 'abv', 'desc').map((r) => r.beer.id);
+      const ids = buildRows(
+        beersWithNull,
+        emptyUserData(),
+        opts({ sort: 'abv', direction: 'desc' }),
+      ).map((r) => r.beer.id);
       // Populated rows descend (z=8, y=5), null still tail-anchored.
       expect(ids).toEqual(['z', 'y', 'x']);
     });
   });
 });
 
-describe('buildRows — filter (slice 1 placeholder)', () => {
-  const beers = [beer({ id: 'a' }), beer({ id: 'b' })];
-
-  it("'all' shows everything", () => {
-    expect(buildRows(beers, '', 'all', 'name')).toHaveLength(2);
+describe('buildRows — filter (user-state aware)', () => {
+  const beers = [beer({ id: 'unset' }), beer({ id: 'queued' }), beer({ id: 'sampled' })];
+  const data = userData({
+    queued: { status: 'toTry' },
+    sampled: { status: 'tried' },
   });
 
-  it("'notTried' shows everything (no user state yet means nothing is tried)", () => {
-    expect(buildRows(beers, '', 'notTried', 'name')).toHaveLength(2);
+  it("'all' shows every beer regardless of state", () => {
+    const ids = buildRows(beers, data, opts({ filter: 'all' })).map((r) => r.beer.id);
+    expect(ids.sort()).toEqual(['queued', 'sampled', 'unset']);
   });
 
-  it("'toTry' shows nothing (no flags set yet)", () => {
-    expect(buildRows(beers, '', 'toTry', 'name')).toHaveLength(0);
+  it("'toTry' shows only beers flagged to try", () => {
+    const ids = buildRows(beers, data, opts({ filter: 'toTry' })).map((r) => r.beer.id);
+    expect(ids).toEqual(['queued']);
   });
 
-  it("'tried' shows nothing (nothing tried yet)", () => {
-    expect(buildRows(beers, '', 'tried', 'name')).toHaveLength(0);
+  it("'tried' shows only sampled beers", () => {
+    const ids = buildRows(beers, data, opts({ filter: 'tried' })).map((r) => r.beer.id);
+    expect(ids).toEqual(['sampled']);
+  });
+
+  it("'notTried' shows both unset and to-try (anything that's not Tried)", () => {
+    const ids = buildRows(beers, data, opts({ filter: 'notTried' })).map((r) => r.beer.id);
+    expect(ids.sort()).toEqual(['queued', 'unset']);
+  });
+});
+
+describe('buildRows — not-present hiding', () => {
+  const beers = [beer({ id: 'visible' }), beer({ id: 'hidden' })];
+  const data = userData({ hidden: { notPresent: true } });
+
+  it('hides not-present beers by default', () => {
+    const ids = buildRows(beers, data, opts()).map((r) => r.beer.id);
+    expect(ids).toEqual(['visible']);
+  });
+
+  it('reveals not-present beers when showNotPresent is true', () => {
+    const ids = buildRows(beers, data, opts({ showNotPresent: true })).map((r) => r.beer.id);
+    expect(ids.sort()).toEqual(['hidden', 'visible']);
+  });
+
+  it('hiding applies before filter (a not-present + to-try beer is still hidden by default)', () => {
+    const data2 = userData({ hidden: { notPresent: true, status: 'toTry' } });
+    const ids = buildRows(beers, data2, opts({ filter: 'toTry' })).map((r) => r.beer.id);
+    expect(ids).toEqual([]);
+  });
+});
+
+describe('buildRows — vm carries per-row state', () => {
+  it('attaches the beer state to each row VM', () => {
+    const beers = [beer({ id: 'b1' })];
+    const data = userData({ b1: { status: 'toTry', opinion: 'liked', notes: 'nice' } });
+    const [vm] = buildRows(beers, data, opts());
+    expect(vm.state.status).toBe('toTry');
+    expect(vm.state.opinion).toBe('liked');
+    expect(vm.state.notes).toBe('nice');
+  });
+
+  it('uses the empty default for untouched beers', () => {
+    const beers = [beer({ id: 'b1' })];
+    const [vm] = buildRows(beers, emptyUserData(), opts());
+    expect(vm.state.status).toBeNull();
+    expect(vm.state.opinion).toBeNull();
+    expect(vm.state.notes).toBe('');
+    expect(vm.state.notPresent).toBe(false);
   });
 });
