@@ -172,6 +172,25 @@ describe('UserStore mutations + persistence', () => {
     expect(store.get('b1').status).toBeNull();
   });
 
+  it('replaceData wholesale-replaces the active dataset user data + persists', () => {
+    const { store, storage } = freshStore();
+    store.setStatus('b1', 'toTry');
+    store.setNotes('b2', 'about to be wiped');
+    store.replaceData({
+      version: 1,
+      beers: {
+        replacement: { status: 'tried', opinion: 'liked', notes: 'new', notPresent: false },
+      },
+    });
+    // Prior entries are gone, replacement is present.
+    expect(store.get('b1').status).toBeNull();
+    expect(store.get('b2').notes).toBe('');
+    expect(store.get('replacement').status).toBe('tried');
+    // Persisted to storage too.
+    const persisted = readPersisted(storage);
+    expect(Object.keys(persisted?.beers ?? {})).toEqual(['replacement']);
+  });
+
   it('marking not-present clears status, opinion, and notes (cascade)', () => {
     const { store, storage } = freshStore();
     store.setStatus('b1', 'tried');
