@@ -76,13 +76,15 @@ clearly-labeled mock data at `public/data/taplist-mock-2026.json`.
 ## Deployment
 
 Pushes to `main` automatically build and deploy to GitHub Pages via
-`.github/workflows/deploy.yml`. The deploy uses `VITE_BASE_PATH` so assets
-resolve correctly under the project's GitHub Pages path
-(`https://<user>.github.io/<repo>/`). A custom domain can be added later
-by reconfiguring GitHub Pages and removing the base-path override.
+`.github/workflows/deploy.yml`. The production site is served from the
+custom domain [`taplist.rampant.io`](https://taplist.rampant.io/) — the
+`public/CNAME` file keeps that wired up across workflow-based deploys.
+`vite.config.ts` still respects `VITE_BASE_PATH` if a project-path fallback
+deploy ever becomes useful.
 
 ## Documentation
 
 - [Overview](docs/overview.md) — why this exists and who it's for
 - [Specification](docs/spec.md) — what the app does
 - [Data model](docs/data-model.md) — catalog, dataset, user data, and CSV format
+- [Code architecture](docs/architecture.md) — module layout, conventions, change recipes
