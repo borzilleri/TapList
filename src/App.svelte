@@ -29,6 +29,19 @@
   // Hydrated immediately — settings are global, not per-dataset.
   const settingsStore = createSettingsStore(window.localStorage);
 
+  // Apply the user's theme preference to <html data-theme>. When the
+  // setting is 'system' we remove the attribute so the CSS @media
+  // (prefers-color-scheme) rule decides; for 'light' / 'dark' the
+  // explicit :root[data-theme] override wins regardless of OS preference.
+  $effect(() => {
+    const theme = settingsStore.theme;
+    if (theme === 'system') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  });
+
   // Service-worker registration + update-prompt state. The actual SW
   // registration happens asynchronously inside register(); errors are
   // logged but don't block the app from loading.
@@ -281,9 +294,11 @@
 {#if settingsOpen}
   <SettingsDrawer
     showNotPresent={settingsStore.showNotPresent}
+    theme={settingsStore.theme}
     {importStatus}
     onClose={() => (settingsOpen = false)}
     onToggleShowNotPresent={(next) => settingsStore.setShowNotPresent(next)}
+    onSetTheme={(next) => settingsStore.setTheme(next)}
     onExport={handleExport}
     onImportFile={handleImportFile}
   />

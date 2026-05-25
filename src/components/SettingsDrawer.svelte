@@ -2,6 +2,7 @@
   import { focusTrap } from '../lib/focusTrap';
   import { lockBodyScroll } from '../lib/scrollLock';
   import { isIosSafari, isStandalonePwa } from '../lib/platform';
+  import type { ThemePreference } from '../lib/types';
 
   // Captured on mount (rather than as a $derived) because the UA / standalone
   // signals don't change across the lifetime of the drawer — and we don't
@@ -10,8 +11,10 @@
 
   interface Props {
     showNotPresent: boolean;
+    theme: ThemePreference;
     onClose: () => void;
     onToggleShowNotPresent: (next: boolean) => void;
+    onSetTheme: (next: ThemePreference) => void;
     onExport: () => void;
     onImportFile: (file: File) => void;
     /**
@@ -23,12 +26,24 @@
 
   const {
     showNotPresent,
+    theme,
     onClose,
     onToggleShowNotPresent,
+    onSetTheme,
     onExport,
     onImportFile,
     importStatus = null,
   }: Props = $props();
+
+  // Emoji picks: sun for light, crescent moon for dark, half-illuminated
+  // moon for system (it splits between the two, hinting at "follows
+  // whatever's outside"). aria-hidden on the icon means screen readers
+  // announce only the label.
+  const themeOptions: ReadonlyArray<{ value: ThemePreference; label: string; icon: string }> = [
+    { value: 'light', label: 'Light', icon: '☀️' },
+    { value: 'dark', label: 'Dark', icon: '🌙' },
+    { value: 'system', label: 'System', icon: '🌗' },
+  ];
 
   let fileInput: HTMLInputElement | undefined = $state();
 
@@ -71,6 +86,28 @@
     </header>
 
     <section class="group" aria-label="Display">
+      <div class="theme-field">
+        <span class="field-label">Theme</span>
+        <div class="theme-segmented" role="radiogroup" aria-label="Theme">
+          {#each themeOptions as opt (opt.value)}
+            <label class="theme-option" class:active={theme === opt.value}>
+              <input
+                type="radio"
+                name="theme"
+                value={opt.value}
+                checked={theme === opt.value}
+                onchange={() => onSetTheme(opt.value)}
+              />
+              <span class="theme-icon" aria-hidden="true">{opt.icon}</span>
+              <span class="theme-label">{opt.label}</span>
+            </label>
+          {/each}
+        </div>
+        <span class="field-hint">
+          System follows your device. Light or Dark overrides regardless of device settings.
+        </span>
+      </div>
+
       <label class="toggle">
         <input
           type="checkbox"
@@ -136,10 +173,6 @@
         </ol>
       </section>
     {/if}
-
-    <p class="footer-note">
-      More settings will live here in future versions — theming, dataset selection, etc.
-    </p>
   </aside>
 </div>
 
@@ -218,6 +251,78 @@
     flex-direction: column;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
+  }
+
+  .theme-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .field-label {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .field-hint {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+  }
+
+  .theme-segmented {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+  .theme-option {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    position: relative;
+    padding: 0.5rem 0.4rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
+    border-right: 1px solid var(--color-border);
+    min-height: 40px;
+  }
+  .theme-icon {
+    font-size: 1rem;
+    line-height: 1;
+    /* Vertically nudge so the emoji baseline lines up with the label
+       — most platforms render moon/sun glyphs slightly above the line. */
+    transform: translateY(-0.05em);
+  }
+  .theme-label {
+    line-height: 1;
+  }
+  .theme-option:last-child {
+    border-right: none;
+  }
+  .theme-option input {
+    /* Hide the native radio; the label itself is the visible affordance. */
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  @media (hover: hover) {
+    .theme-option:hover {
+      background: var(--color-accent-bg);
+    }
+  }
+  .theme-option:focus-within {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+    z-index: 1;
+  }
+  .theme-option.active {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-weight: 600;
   }
 
   .toggle {
@@ -335,14 +440,5 @@
        SF Symbol Apple ships. */
     color: var(--color-accent);
     font-weight: 700;
-  }
-
-  .footer-note {
-    margin: 0;
-    padding-top: 1rem;
-    border-top: 1px dashed var(--color-border);
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    line-height: 1.4;
   }
 </style>

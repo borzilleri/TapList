@@ -103,10 +103,18 @@ export const EMPTY_BEER_USER_STATE: Readonly<BeerUserState> = Object.freeze({
  * to localStorage under `taplist:settings`. Versioned for future
  * migrations.
  */
+/**
+ * Color scheme preference. `'system'` defers to `prefers-color-scheme`;
+ * `'light'` and `'dark'` force the corresponding palette regardless.
+ */
+export type ThemePreference = 'light' | 'dark' | 'system';
+
 export interface AppSettings {
   version: 1;
   /** When true, beers the user has marked notPresent are visible in the list. */
   showNotPresent: boolean;
+  /** User's color scheme preference. Defaults to 'system'. */
+  theme: ThemePreference;
 }
 
 // --- View model: sort/filter/search state for the list view ---
