@@ -1,4 +1,4 @@
-// Flat config for ESLint 9 + TypeScript + Svelte 5.
+// Flat config for ESLint 10 + TypeScript + Svelte 5.
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import svelte from 'eslint-plugin-svelte';
@@ -29,11 +29,23 @@ export default [
     },
   },
   {
+    // The Svelte parser handles .svelte files; nested <script lang="ts">
+    // blocks defer to the TS parser via parserOptions.parser.
     files: ['**/*.svelte'],
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser,
       },
+    },
+  },
+  {
+    // .svelte.ts / .svelte.js modules (rune-using stores) are plain TS as
+    // far as ESLint is concerned. eslint-plugin-svelte v3's recommended
+    // configs claim this extension for the Svelte parser, so we override
+    // it back to the TS parser here.
+    files: ['**/*.svelte.ts', '**/*.svelte.js'],
+    languageOptions: {
+      parser: tseslint.parser,
     },
   },
   {
