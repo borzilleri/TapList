@@ -1,0 +1,4 @@
+# TapList is an unofficial guide for the Washington Brewers Festival.
+# Crawlers welcome — there's nothing private here.
+User-agent: *
+Allow: /
