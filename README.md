@@ -42,6 +42,20 @@ npm install
 
 The e2e suite expects `npm run preview` to be running on port 4173. First run on a new machine also needs `npx playwright install chromium` to download the headless browser.
 
+### Lighthouse audit
+
+Not on a fixed cadence, but worth re-running before significant releases. With the preview server up on port 4173:
+
+```sh
+CHROME_PATH="/Users/<you>/Library/Caches/ms-playwright/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing" \
+  npx lighthouse http://localhost:4173/ \
+  --quiet --output=html --output-path=./lighthouse-report.html \
+  --form-factor=mobile \
+  --only-categories=performance,accessibility,best-practices,seo
+```
+
+Last known baseline (post slice 6c): Performance 99, Accessibility 100, Best-practices 100, SEO 100.
+
 ### Project structure
 
 ```
