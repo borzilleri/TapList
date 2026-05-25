@@ -173,10 +173,6 @@
         </ol>
       </section>
     {/if}
-
-    <p class="footer-note">
-      More settings will live here in future versions — theming, dataset selection, etc.
-    </p>
   </aside>
 </div>
 
@@ -444,14 +440,5 @@
        SF Symbol Apple ships. */
     color: var(--color-accent);
     font-weight: 700;
-  }
-
-  .footer-note {
-    margin: 0;
-    padding-top: 1rem;
-    border-top: 1px dashed var(--color-border);
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    line-height: 1.4;
   }
 </style>
