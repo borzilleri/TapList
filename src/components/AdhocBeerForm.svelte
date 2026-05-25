@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AdhocBeerPayload } from '../lib/types';
+  import { focusTrap } from '../lib/focusTrap';
 
   interface Props {
     /**
@@ -124,7 +125,7 @@
   }}
   tabindex="-1"
 >
-  <form class="panel" onsubmit={handleSubmit}>
+  <form class="panel" onsubmit={handleSubmit} use:focusTrap>
     <header>
       <h2 id="adhoc-title">{isEdit ? 'Edit ad-hoc beer' : 'Add a beer'}</h2>
       <button type="button" class="close" onclick={onClose} aria-label="Close">×</button>
@@ -374,7 +375,7 @@
   .save {
     background: var(--color-accent);
     border: 1px solid var(--color-accent);
-    color: white;
+    color: var(--color-on-accent);
     font-weight: 600;
   }
   @media (hover: hover) {

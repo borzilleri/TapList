@@ -1,6 +1,7 @@
 <script lang="ts">
   import { NOTES_MAX_LENGTH, type Beer, type BeerStatus, type Opinion } from '../lib/types';
   import type { UserStore } from '../lib/userStore.svelte';
+  import { focusTrap } from '../lib/focusTrap';
 
   interface Props {
     beer: Beer;
@@ -76,7 +77,7 @@
   }}
   tabindex="-1"
 >
-  <div class="panel" role="document">
+  <div class="panel" role="document" use:focusTrap>
     <header>
       <h2 id="detail-title">{beer.name}</h2>
       <button class="close" type="button" onclick={onClose} aria-label="Close">×</button>
@@ -333,7 +334,7 @@
   .action.active {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: white;
+    color: var(--color-on-accent);
   }
   .action .icon {
     font-size: 1.1rem;
