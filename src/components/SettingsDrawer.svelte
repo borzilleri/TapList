@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { focusTrap } from '../lib/focusTrap';
+  import { lockBodyScroll } from '../lib/scrollLock';
+
   interface Props {
     showNotPresent: boolean;
     onClose: () => void;
@@ -53,8 +56,9 @@
     if (e.target === e.currentTarget) onClose();
   }}
   tabindex="-1"
+  use:lockBodyScroll
 >
-  <aside class="drawer">
+  <aside class="drawer" use:focusTrap>
     <header>
       <h2 id="settings-title">Settings</h2>
       <button class="close" type="button" onclick={onClose} aria-label="Close settings">×</button>
@@ -134,16 +138,21 @@
     padding: 1.25rem 1.25rem 2rem;
     box-shadow: var(--shadow-md);
     -webkit-overflow-scrolling: touch;
-    animation: slideIn 0.18s ease-out;
   }
-  @keyframes slideIn {
-    from {
-      transform: translateX(20px);
-      opacity: 0.4;
+  /* Only animate the slide-in when the user hasn't asked for reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .drawer {
+      animation: slideIn 0.18s ease-out;
     }
-    to {
-      transform: translateX(0);
-      opacity: 1;
+    @keyframes slideIn {
+      from {
+        transform: translateX(20px);
+        opacity: 0.4;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
     }
   }
 
