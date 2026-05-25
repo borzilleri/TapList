@@ -121,6 +121,64 @@ const tests: TestCase[] = [
       });
     },
   },
+  // The dialog tests reach the dialogs singleton through `window.__taplistDialogs`,
+  // which is exposed by src/lib/dialogs.svelte.ts as an e2e/debug hook.
+  {
+    name: 'Confirm dialog: resolves true on Confirm click',
+    async run(page) {
+      const result = await page.evaluate(async () => {
+        const d = (
+          window as unknown as { __taplistDialogs: { confirm: (o: object) => Promise<boolean> } }
+        ).__taplistDialogs;
+        const p = d.confirm({ title: 'Smoke test' });
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+        document
+          .querySelector<HTMLButtonElement>('[aria-labelledby="confirm-title"] .confirm')
+          ?.click();
+        return await p;
+      });
+      assert(result === true, `Expected dialog to resolve true on Confirm click, got ${result}`);
+    },
+  },
+  {
+    name: 'Confirm dialog: Escape resolves false',
+    async run(page) {
+      await page.evaluate(() => {
+        const d = (
+          window as unknown as { __taplistDialogs: { confirm: (o: object) => Promise<boolean> } }
+        ).__taplistDialogs;
+        (window as unknown as { __pending: Promise<boolean> }).__pending = d.confirm({
+          title: 'Escape test',
+        });
+      });
+      await page.waitForSelector('[aria-labelledby="confirm-title"]', { timeout: 1000 });
+      await page.keyboard.press('Escape');
+      const result = await page.evaluate(
+        () => (window as unknown as { __pending: Promise<boolean> }).__pending,
+      );
+      assert(result === false, `Expected Escape to resolve false, got ${result}`);
+    },
+  },
+  {
+    name: 'Confirm dialog: backdrop click resolves false',
+    async run(page) {
+      await page.evaluate(() => {
+        const d = (
+          window as unknown as { __taplistDialogs: { confirm: (o: object) => Promise<boolean> } }
+        ).__taplistDialogs;
+        (window as unknown as { __pending: Promise<boolean> }).__pending = d.confirm({
+          title: 'Backdrop test',
+        });
+      });
+      await page.waitForSelector('[aria-labelledby="confirm-title"]', { timeout: 1000 });
+      // Click the viewport corner so we land on the backdrop, not the centered panel.
+      await page.mouse.click(5, 5);
+      const result = await page.evaluate(
+        () => (window as unknown as { __pending: Promise<boolean> }).__pending,
+      );
+      assert(result === false, `Expected backdrop click to resolve false, got ${result}`);
+    },
+  },
   {
     name: 'Ad-hoc form: focus traps and returns to opener',
     async run(page) {
