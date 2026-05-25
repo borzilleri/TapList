@@ -119,7 +119,7 @@
   </div>
 
   {#if rows.length === 0}
-    <p class="empty">
+    <p class="empty" role="status" aria-live="polite">
       {#if search}
         No beers match "{search}".
       {:else}
@@ -132,7 +132,12 @@
         <li><BeerRow {vm} {onSelect} {onToggleToTry} /></li>
       {/each}
     </ul>
-    <p class="count">
+    <!--
+      Announces when the result count changes (filter / search / sort tweaks
+      that change visibility). aria-live="polite" so it doesn't interrupt
+      whatever the user was just doing.
+    -->
+    <p class="count" role="status" aria-live="polite">
       Showing {rows.length} of {beers.length}
     </p>
   {/if}
@@ -227,7 +232,7 @@
   .sort .direction[aria-pressed='true'] {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: white;
+    color: var(--color-on-accent);
   }
 
   .filter {
@@ -263,7 +268,7 @@
   .chip.active {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: white;
+    color: var(--color-on-accent);
   }
 
   .rows {

@@ -212,7 +212,7 @@
 
 <main>
   {#await loadPromise}
-    <p class="status">Loading the beer list…</p>
+    <p class="status" role="status" aria-live="polite">Loading the beer list…</p>
   {:then dataset}
     <BeerList
       beers={dataset.beers}
@@ -340,7 +340,7 @@
     border-radius: var(--radius);
     border: 1px solid var(--color-accent);
     background: var(--color-accent);
-    color: white;
+    color: var(--color-on-accent);
     font-size: 1rem;
   }
 </style>

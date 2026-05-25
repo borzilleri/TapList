@@ -16,6 +16,12 @@
   --color-accent: #b8651b;
   --color-accent-bg: #fbece0;
   --color-highlight-bg: #fff3a3;
+  /*
+   * Foreground color to use when text sits on top of --color-accent (filled
+   * buttons, active chips). Per-scheme so we meet WCAG AA contrast on both
+   * the deep light-mode accent and the lighter dark-mode accent.
+   */
+  --color-on-accent: #ffffff;
 
   --radius: 8px;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -40,6 +46,8 @@
     --color-accent: #e8a25e;
     --color-accent-bg: #3a2b1b;
     --color-highlight-bg: #6a5a1a;
+    /* Dark text on the lighter dark-mode accent — white would fail AA. */
+    --color-on-accent: #161513;
   }
 }
 

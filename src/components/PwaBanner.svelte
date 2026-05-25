@@ -51,16 +51,21 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow-md);
     font-size: 0.9rem;
-    animation: pwa-slide-up 0.18s ease-out;
   }
-  @keyframes pwa-slide-up {
-    from {
-      opacity: 0;
-      transform: translate(-50%, 8px);
+  /* Only animate the slide-up when the user hasn't asked for reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .banner {
+      animation: pwa-slide-up 0.18s ease-out;
     }
-    to {
-      opacity: 1;
-      transform: translate(-50%, 0);
+    @keyframes pwa-slide-up {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
     }
   }
 
@@ -73,7 +78,7 @@
     flex: 0 0 auto;
     padding: 0.4rem 0.8rem;
     background: var(--color-accent);
-    color: white;
+    color: var(--color-on-accent);
     border: 1px solid var(--color-accent);
     border-radius: var(--radius);
     font-size: 0.9rem;
