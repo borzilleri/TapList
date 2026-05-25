@@ -36,6 +36,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * Dark palette via the system media query. This is the default when the
+ * user's theme preference is 'system'. The explicit overrides below take
+ * precedence when the user has chosen 'light' or 'dark' in settings.
+ */
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #161513;
@@ -49,6 +54,37 @@
     /* Dark text on the lighter dark-mode accent — white would fail AA. */
     --color-on-accent: #161513;
   }
+}
+
+/*
+ * Explicit user-chosen themes. The data-theme attribute is set on <html>
+ * by the app whenever settings.theme !== 'system'. These selectors win
+ * over the prefers-color-scheme media query because they're declared
+ * later (cascade order), so the user's pick overrides the system
+ * preference deterministically.
+ */
+:root[data-theme='light'] {
+  --color-bg: #fafaf8;
+  --color-surface: #ffffff;
+  --color-border: #e0dcd4;
+  --color-text: #1a1a1a;
+  --color-text-muted: #666;
+  --color-accent: #b8651b;
+  --color-accent-bg: #fbece0;
+  --color-highlight-bg: #fff3a3;
+  --color-on-accent: #ffffff;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #161513;
+  --color-surface: #1f1e1c;
+  --color-border: #34322f;
+  --color-text: #f0ece4;
+  --color-text-muted: #999;
+  --color-accent: #e8a25e;
+  --color-accent-bg: #3a2b1b;
+  --color-highlight-bg: #6a5a1a;
+  --color-on-accent: #161513;
 }
 
 * {

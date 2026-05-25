@@ -45,6 +45,18 @@ describe('parseSettings', () => {
     const parsed = parseSettings({ version: 1, showNotPresent: 'yes' });
     expect(parsed.showNotPresent).toBe(false);
   });
+
+  it("defaults theme to 'system' when missing or invalid", () => {
+    expect(parseSettings({ version: 1, showNotPresent: false }).theme).toBe('system');
+    expect(parseSettings({ version: 1, showNotPresent: false, theme: 'magenta' }).theme).toBe(
+      'system',
+    );
+  });
+
+  it.each(['light', 'dark', 'system'] as const)('reads theme=%s', (theme) => {
+    const parsed = parseSettings({ version: 1, showNotPresent: false, theme });
+    expect(parsed.theme).toBe(theme);
+  });
 });
 
 describe('loadSettings + saveSettings', () => {
@@ -59,8 +71,12 @@ describe('loadSettings + saveSettings', () => {
 
   it('round-trips through save + load', () => {
     const storage = makeStorage();
-    saveSettings(storage, { version: 1, showNotPresent: true });
-    expect(loadSettings(storage)).toEqual({ version: 1, showNotPresent: true });
+    saveSettings(storage, { version: 1, showNotPresent: true, theme: 'dark' });
+    expect(loadSettings(storage)).toEqual({
+      version: 1,
+      showNotPresent: true,
+      theme: 'dark',
+    });
   });
 });
 
@@ -85,7 +101,26 @@ describe('SettingsStore', () => {
     expect(store.showNotPresent).toBe(true);
     const raw = storage.raw.get('taplist:settings');
     expect(raw).toBeDefined();
-    expect(JSON.parse(raw!)).toEqual({ version: 1, showNotPresent: true });
+    expect(JSON.parse(raw!)).toEqual({ version: 1, showNotPresent: true, theme: 'system' });
+  });
+
+  it("defaults theme to 'system' on first run", () => {
+    expect(createSettingsStore(makeStorage()).theme).toBe('system');
+  });
+
+  it('setTheme persists immediately', () => {
+    const storage = makeStorage();
+    const store = createSettingsStore(storage);
+    store.setTheme('dark');
+    expect(store.theme).toBe('dark');
+    const raw = storage.raw.get('taplist:settings');
+    expect(JSON.parse(raw!).theme).toBe('dark');
+  });
+
+  it('theme survives reload', () => {
+    const storage = makeStorage();
+    createSettingsStore(storage).setTheme('light');
+    expect(createSettingsStore(storage).theme).toBe('light');
   });
 
   it('survives a hypothetical reload (new store reads what the prior wrote)', () => {

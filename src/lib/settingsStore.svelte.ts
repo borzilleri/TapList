@@ -10,13 +10,18 @@
  */
 
 import { type StorageLike } from './storage';
-import type { AppSettings } from './types';
+import type { AppSettings, ThemePreference } from './types';
 
 const STORAGE_KEY = 'taplist:settings';
 const CURRENT_VERSION = 1 as const;
 
 export function defaultSettings(): AppSettings {
-  return { version: CURRENT_VERSION, showNotPresent: false };
+  return { version: CURRENT_VERSION, showNotPresent: false, theme: 'system' };
+}
+
+function parseTheme(value: unknown): ThemePreference {
+  if (value === 'light' || value === 'dark' || value === 'system') return value;
+  return 'system';
 }
 
 /**
@@ -33,6 +38,7 @@ export function parseSettings(raw: unknown): AppSettings {
   return {
     version: CURRENT_VERSION,
     showNotPresent: obj.showNotPresent === true,
+    theme: parseTheme(obj.theme),
   };
 }
 
@@ -65,6 +71,16 @@ export class SettingsStore {
   setShowNotPresent(value: boolean): void {
     if (this.data.showNotPresent === value) return;
     this.data = { ...this.data, showNotPresent: value };
+    saveSettings(this.storage, this.data);
+  }
+
+  get theme(): ThemePreference {
+    return this.data.theme;
+  }
+
+  setTheme(value: ThemePreference): void {
+    if (this.data.theme === value) return;
+    this.data = { ...this.data, theme: value };
     saveSettings(this.storage, this.data);
   }
 }
