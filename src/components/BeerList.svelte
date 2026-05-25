@@ -50,6 +50,42 @@
     sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
   }
 
+  /**
+   * Filter-aware empty-state copy. The component reaches this branch when
+   * `rows.length === 0`, which can happen for several different reasons —
+   * each one needs different copy and (sometimes) a recovery action.
+   */
+  const emptyState = $derived.by((): { title: string; hint?: string } => {
+    const q = search.trim();
+    if (q.length > 0) {
+      const prefix = { all: '', toTry: 'to-try ', tried: 'tried ', notTried: 'untried ' }[filter];
+      return { title: `No ${prefix}beers match “${q}”.` };
+    }
+    if (filter === 'toTry') {
+      return {
+        title: 'Nothing in your to-try list yet.',
+        hint: 'Tap ☆ on a beer to add it.',
+      };
+    }
+    if (filter === 'tried') {
+      return {
+        title: "You haven't marked any beers as tried yet.",
+        hint: "Open a beer and tap ✓ Tried once you've sampled it.",
+      };
+    }
+    if (filter === 'notTried') {
+      return {
+        title: "You've tried every beer in the list.",
+        hint: 'Cheers \u{1F37B}',
+      };
+    }
+    return { title: 'No beers to show.' };
+  });
+
+  function clearSearch() {
+    search = '';
+  }
+
   // Per-key labels for the direction button, so the tooltip describes what
   // the button will do — clearer than a generic "Reverse sort".
   const directionLabel = $derived.by(() => {
@@ -119,13 +155,20 @@
   </div>
 
   {#if rows.length === 0}
-    <p class="empty" role="status" aria-live="polite">
-      {#if search}
-        No beers match "{search}".
-      {:else}
-        No beers to show.
+    <div class="empty" role="status" aria-live="polite">
+      <p class="empty-title">{emptyState.title}</p>
+      {#if emptyState.hint}
+        <p class="empty-hint">{emptyState.hint}</p>
       {/if}
-    </p>
+      <!--
+        Recovery action: only "Clear search" is offered. "Nothing in your
+        to-try list" doesn't get a button because the recovery is to flag
+        more beers, not to click a reset.
+      -->
+      {#if search.trim().length > 0}
+        <button type="button" class="empty-action" onclick={clearSearch}>Clear search</button>
+      {/if}
+    </div>
   {:else}
     <ul class="rows">
       {#each rows as vm (vm.beer.id)}
@@ -281,9 +324,47 @@
   }
 
   .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
     text-align: center;
     color: var(--color-text-muted);
-    padding: 2rem 1rem;
+    padding: 2.5rem 1rem;
+  }
+  .empty-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    max-width: 28rem;
+  }
+  .empty-hint {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 28rem;
+  }
+  .empty-action {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-height: 44px;
+    color: var(--color-text);
+  }
+  @media (hover: hover) {
+    .empty-action:hover {
+      background: var(--color-accent-bg);
+    }
+  }
+  .empty-action:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
   }
 
   .count {

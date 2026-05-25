@@ -17,6 +17,7 @@
   import AdhocBeerForm from './components/AdhocBeerForm.svelte';
   import PwaBanner from './components/PwaBanner.svelte';
   import ConfirmDialog from './components/ConfirmDialog.svelte';
+  import LoadingSkeleton from './components/LoadingSkeleton.svelte';
   import { dialogs } from './lib/dialogs.svelte';
   import { mergeBeers } from './lib/list';
 
@@ -229,7 +230,13 @@
 
 <main>
   {#await loadPromise}
-    <p class="status" role="status" aria-live="polite">Loading the beer list…</p>
+    <!--
+      Visual skeleton while we wait. The screen-reader announcement is on a
+      separate sr-only node so the placeholder cards stay cosmetic — assistive
+      tech hears "Loading…" once, not "card card card."
+    -->
+    <p class="sr-only" role="status" aria-live="polite">Loading the beer list…</p>
+    <LoadingSkeleton />
   {:then dataset}
     <BeerList
       beers={dataset.beers}
