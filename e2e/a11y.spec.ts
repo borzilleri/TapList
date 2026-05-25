@@ -180,6 +180,46 @@ const tests: TestCase[] = [
     },
   },
   {
+    // Regression guard: Escape on a confirm dialog stacked over the
+    // settings drawer must close ONLY the confirm — the drawer
+    // underneath stays open. The naive `<svelte:window onkeydown>`
+    // pattern in both layers used to close both in one keystroke; the
+    // capture-phase listener in ConfirmDialog + stopImmediatePropagation
+    // is what fixes it.
+    name: 'Confirm dialog: Escape over an open drawer leaves the drawer in place',
+    async run(page) {
+      // Open the settings drawer the normal way (gear button).
+      await page.locator('button[aria-label="Settings"]').click();
+      await page.waitForSelector('[aria-labelledby="settings-title"]', { timeout: 1000 });
+      // Stack a confirm dialog on top via the same back door the other tests use.
+      await page.evaluate(() => {
+        const d = (
+          window as unknown as { __taplistDialogs: { confirm: (o: object) => Promise<boolean> } }
+        ).__taplistDialogs;
+        (window as unknown as { __pending: Promise<boolean> }).__pending = d.confirm({
+          title: 'Stacked test',
+        });
+      });
+      await page.waitForSelector('[aria-labelledby="confirm-title"]', { timeout: 1000 });
+      await page.keyboard.press('Escape');
+      // Give Svelte a tick to unmount the confirm.
+      await page.waitForTimeout(50);
+      // Confirm dialog should be gone…
+      const confirmGone = (await page.locator('[aria-labelledby="confirm-title"]').count()) === 0;
+      assert(confirmGone, 'Expected the confirm dialog to close after Escape');
+      // …and the drawer should still be there.
+      const drawerStillOpen =
+        (await page.locator('[aria-labelledby="settings-title"]').count()) === 1;
+      assert(drawerStillOpen, 'Expected the settings drawer to stay open');
+      const result = await page.evaluate(
+        () => (window as unknown as { __pending: Promise<boolean> }).__pending,
+      );
+      assert(result === false, `Expected confirm to resolve false on Escape, got ${result}`);
+      // Cleanup for subsequent tests.
+      await page.keyboard.press('Escape');
+    },
+  },
+  {
     name: 'Empty state: filter-aware copy and Clear-search recovery',
     async run(page) {
       // Search-with-no-matches: the title should reference the query.

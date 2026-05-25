@@ -2,7 +2,6 @@
   import type { AdhocBeerPayload } from '../lib/types';
   import { focusTrap } from '../lib/focusTrap';
   import { lockBodyScroll } from '../lib/scrollLock';
-  import { dialogs } from '../lib/dialogs.svelte';
 
   interface Props {
     /**
@@ -54,9 +53,7 @@
   let abvInput: HTMLInputElement | undefined = $state();
 
   function onKeydown(e: KeyboardEvent) {
-    // Consistent with the other modals: defer Escape to a confirm
-    // dialog if one is open on top.
-    if (e.key === 'Escape' && !dialogs.current) onClose();
+    if (e.key === 'Escape') onClose();
   }
 
   function validate(): AdhocBeerPayload | null {

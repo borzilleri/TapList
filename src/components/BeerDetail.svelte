@@ -20,10 +20,7 @@
   const isAdhoc = $derived(state.adhoc !== undefined);
 
   function onKeydown(e: KeyboardEvent) {
-    // When a confirm dialog is open on top of the detail view (e.g. the
-    // delete-ad-hoc flow), defer Escape to it — otherwise both modals
-    // would close in one keystroke.
-    if (e.key === 'Escape' && !dialogs.current) onClose();
+    if (e.key === 'Escape') onClose();
   }
 
   async function handleDelete() {
