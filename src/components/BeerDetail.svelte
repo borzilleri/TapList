@@ -82,7 +82,7 @@
   tabindex="-1"
   use:lockBodyScroll
 >
-  <div class="panel" role="document" use:focusTrap>
+  <div class="panel" use:focusTrap>
     <header>
       <h2 id="detail-title">{beer.name}</h2>
       <button class="close" type="button" onclick={onClose} aria-label="Close">×</button>

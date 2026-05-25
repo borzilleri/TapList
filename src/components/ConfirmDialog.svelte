@@ -7,15 +7,28 @@
   // component's {#if} branch mounts and the dialog appears.
   const current = $derived(dialogs.current);
 
-  function onKeydown(e: KeyboardEvent) {
-    if (current && e.key === 'Escape') {
+  // Escape handling uses a CAPTURE-phase window listener rather than the
+  // declarative `<svelte:window onkeydown>` (which registers in bubble
+  // phase). Why: confirm dialogs are typically stacked on top of another
+  // modal (BeerDetail's delete-ad-hoc flow, SettingsDrawer's import-
+  // replace flow), and those parents have their own bubble-phase Escape
+  // listeners. If both bubble handlers run in the same keystroke, a
+  // single Escape would close BOTH the confirm dialog AND the modal
+  // underneath. Capture phase always fires first, and
+  // stopImmediatePropagation blocks the bubble-phase listeners from
+  // ever seeing the event — so the parent modal stays open.
+  $effect(() => {
+    if (!current) return;
+    function handler(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return;
       e.preventDefault();
+      e.stopImmediatePropagation();
       dialogs.respond(false);
     }
-  }
+    window.addEventListener('keydown', handler, { capture: true });
+    return () => window.removeEventListener('keydown', handler, { capture: true });
+  });
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 {#if current}
   {@const opts = current.options}

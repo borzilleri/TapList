@@ -151,8 +151,9 @@
         autocapitalize="words"
         required
         aria-invalid={nameError !== null}
+        aria-describedby={nameError ? 'adhoc-name-error' : undefined}
       />
-      {#if nameError}<span class="field-error">{nameError}</span>{/if}
+      {#if nameError}<span id="adhoc-name-error" class="field-error">{nameError}</span>{/if}
     </label>
 
     <label class="field">
@@ -168,8 +169,11 @@
         autocapitalize="words"
         required
         aria-invalid={breweryError !== null}
+        aria-describedby={breweryError ? 'adhoc-brewery-error' : undefined}
       />
-      {#if breweryError}<span class="field-error">{breweryError}</span>{/if}
+      {#if breweryError}
+        <span id="adhoc-brewery-error" class="field-error">{breweryError}</span>
+      {/if}
     </label>
 
     <div class="field-row">
@@ -183,8 +187,9 @@
           placeholder="5.2"
           autocomplete="off"
           aria-invalid={abvError !== null}
+          aria-describedby={abvError ? 'adhoc-abv-error' : undefined}
         />
-        {#if abvError}<span class="field-error">{abvError}</span>{/if}
+        {#if abvError}<span id="adhoc-abv-error" class="field-error">{abvError}</span>{/if}
       </label>
       <label class="field field-flex-3">
         <span class="field-label">Style</span>

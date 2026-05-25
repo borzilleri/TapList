@@ -318,4 +318,39 @@ describe('UserStore ad-hoc beers', () => {
       expect(Object.keys(store.all.beers).length).toBe(beforeCount);
     });
   });
+
+  describe('not-present round-trip', () => {
+    it('preserves the ad-hoc payload through a not-present toggle cycle', () => {
+      // Regression guard: marking an ad-hoc beer not-present clears
+      // status/opinion/notes (per the cascade) but must NOT drop the
+      // adhoc payload — otherwise the beer would vanish from the list
+      // when the user un-marks it.
+      const { store, storage } = freshStore();
+      const id = store.addAdhoc({ name: 'Mystery', brewery: 'Backstage', abv: 4.5 });
+      store.setStatus(id, 'tried');
+      store.setOpinion(id, 'liked');
+      store.setNotes(id, 'funky');
+
+      store.setNotPresent(id, true);
+      // Cascade: user state is wiped but the adhoc payload survives.
+      expect(store.get(id).notPresent).toBe(true);
+      expect(store.get(id).status).toBeNull();
+      expect(store.get(id).opinion).toBeNull();
+      expect(store.get(id).notes).toBe('');
+      expect(store.get(id).adhoc).toEqual({
+        name: 'Mystery',
+        brewery: 'Backstage',
+        abv: 4.5,
+      });
+      // ...and persists.
+      expect(readPersisted(storage)?.beers?.[id]?.adhoc?.name).toBe('Mystery');
+
+      // Un-mark not-present: the beer remains, payload intact, state
+      // back to "untouched" (the cascade doesn't restore prior status).
+      store.setNotPresent(id, false);
+      expect(store.get(id).notPresent).toBe(false);
+      expect(store.get(id).adhoc?.name).toBe('Mystery');
+      expect(readPersisted(storage)?.beers?.[id]?.adhoc?.name).toBe('Mystery');
+    });
+  });
 });

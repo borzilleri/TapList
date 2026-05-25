@@ -255,6 +255,21 @@ describe('loadActiveDataset', () => {
     await expect(loadActiveDataset(fetchImpl, null, '/')).rejects.toThrow(/Catalog fetch failed/);
   });
 
+  it('throws when the dataset URL returns 404 after a valid catalog', async () => {
+    // Real failure mode: stale catalog points at a dataset file that
+    // has been removed or renamed. The catalog parses cleanly, then
+    // the dataset fetch 404s — the error must surface so the App's
+    // {:catch} block can show a retry UX.
+    const fetchImpl = makeFetch({
+      '/data/catalog.json': {
+        version: 1,
+        datasets: [{ id: 'gone', name: 'Gone', url: '/data/gone.json', default: true }],
+      },
+      // Note: /data/gone.json intentionally missing — makeFetch returns 404.
+    });
+    await expect(loadActiveDataset(fetchImpl, null, '/')).rejects.toThrow(/Dataset fetch failed/);
+  });
+
   it('resolves catalog-relative URLs against the base path', async () => {
     const fetchImpl = makeFetch({
       '/TapList/data/catalog.json': {
