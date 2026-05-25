@@ -284,6 +284,50 @@ describe('parseImport', () => {
     expect(result.userData.beers['adhoc-x'].adhoc).toBeDefined();
   });
 
+  it('enforces the opinion→tried cascade on import', () => {
+    // A CSV with opinion=liked but tried=false violates the invariant
+    // opinion != null ⇒ status === 'tried'. The importer promotes
+    // status to 'tried' so the in-memory state is one the UI can reach.
+    const result = importCsv(
+      'id,is_adhoc,to_try,tried,opinion\r\n' + 'wbf26-0001,false,false,false,liked\r\n',
+    );
+    const state = result.userData.beers['wbf26-0001'];
+    expect(state.status).toBe('tried');
+    expect(state.opinion).toBe('liked');
+  });
+
+  it('promotes to-try → tried when opinion is set', () => {
+    // Same cascade, but starting from to_try=true instead of all-false.
+    const result = importCsv(
+      'id,is_adhoc,to_try,tried,opinion\r\n' + 'wbf26-0001,false,true,false,disliked\r\n',
+    );
+    const state = result.userData.beers['wbf26-0001'];
+    expect(state.status).toBe('tried');
+    expect(state.opinion).toBe('disliked');
+  });
+
+  it('leaves status alone when opinion is empty', () => {
+    // Regression guard: the cascade should only fire when opinion is non-null.
+    const result = importCsv(
+      'id,is_adhoc,to_try,tried,opinion\r\n' + 'wbf26-0001,false,true,false,\r\n',
+    );
+    expect(result.userData.beers['wbf26-0001'].status).toBe('toTry');
+    expect(result.userData.beers['wbf26-0001'].opinion).toBeNull();
+  });
+
+  it('drops is_adhoc=true rows whose id collides with a dataset beer', () => {
+    // A hand-crafted CSV could try to spoof an ad-hoc payload on a
+    // dataset beer's slot. The importer rejects these as invalid
+    // rather than overwriting the dataset entry's user state.
+    const result = importCsv(
+      'id,name,brewery,is_adhoc,tried\r\n' +
+        'wbf26-0001,Spoofed Beer,Spoofed Brewery,true,true\r\n',
+    );
+    expect(result.applied).toBe(0);
+    expect(result.droppedInvalid).toBe(1);
+    expect(result.userData.beers['wbf26-0001']).toBeUndefined();
+  });
+
   it('enforces the not-present cascade on import (clears status/opinion/notes)', () => {
     const result = importCsv(
       'id,is_adhoc,to_try,tried,opinion,notes,not_present\r\n' +

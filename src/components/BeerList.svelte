@@ -181,7 +181,7 @@
       whatever the user was just doing.
     -->
     <p class="count" role="status" aria-live="polite">
-      Showing {rows.length} of {beers.length}
+      Showing {rows.length} of {combined.length}
     </p>
   {/if}
 </section>
