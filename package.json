@@ -23,8 +23,6 @@
     "@eslint/js": "^9.39.4",
     "@sveltejs/vite-plugin-svelte": "^5.1.1",
     "@tsconfig/svelte": "^5.0.4",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
     "@vite-pwa/assets-generator": "^1.0.2",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.2",

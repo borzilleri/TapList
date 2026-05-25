@@ -6,7 +6,7 @@ This document describes what the app does and how it behaves. The dataset and st
 
 - Single-page web app with no server-side components.
 - Installable PWA with full offline support: service worker caches the app shell and the latest dataset so the app works with zero signal once first loaded.
-- Hosted on **GitHub Pages** from the app repo. The default `<user>.github.io/<repo>` hostname is used during development and early deploys; a custom domain will be wired up later (DNS change only — no code impact, since all dataset URLs are relative to the deployed site root).
+- Hosted on **GitHub Pages** from the app repo. Production serves from the custom domain `taplist.rampant.io`; dataset URLs are relative to the deployed site root so changing hosts has no code impact.
 - Mobile-first responsive layout. Primary target is a phone in portrait, one-handed use. Tablet and desktop get wider, more spacious versions of the same UI.
 - Browser support: latest two versions of Chrome, Safari, Firefox, and Edge; iOS Safari 14+.
 - Accessibility target: WCAG 2.1 AA.
