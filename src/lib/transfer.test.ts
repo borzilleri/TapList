@@ -276,6 +276,19 @@ describe('parseImport', () => {
     expect(result.droppedInvalid).toBe(1);
   });
 
+  it('propagates a CSV parse error (unclosed quote) to the caller', () => {
+    // The handler in App.svelte wraps parseImport in try/catch so the
+    // user sees a friendly status line. Verify the throw contract holds
+    // — if the underlying CSV is malformed, parseImport must throw
+    // rather than returning a partial result.
+    expect(() =>
+      parseImport({
+        csvText: 'id,name\r\nwbf26-0001,"unclosed quote\r\n',
+        datasetBeers,
+      }),
+    ).toThrow(/CSV parse/);
+  });
+
   it('silently skips fully-empty rows (trailing blank lines, commas-only)', () => {
     // A trailing blank line is noise, not bad data — don't pollute the
     // drop count with it.

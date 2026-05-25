@@ -2,6 +2,7 @@
   import { focusTrap } from '../lib/focusTrap';
   import { lockBodyScroll } from '../lib/scrollLock';
   import { isIosSafari, isStandalonePwa } from '../lib/platform';
+  import { dialogs } from '../lib/dialogs.svelte';
   import type { ThemePreference } from '../lib/types';
 
   // Captured on mount (rather than as a $derived) because the UA / standalone
@@ -48,7 +49,9 @@
   let fileInput: HTMLInputElement | undefined = $state();
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') onClose();
+    // When the import-replace confirm dialog is open on top of the
+    // drawer, defer Escape to it.
+    if (e.key === 'Escape' && !dialogs.current) onClose();
   }
 
   function onFileChange(e: Event) {

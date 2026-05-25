@@ -2,6 +2,7 @@
   import type { AdhocBeerPayload } from '../lib/types';
   import { focusTrap } from '../lib/focusTrap';
   import { lockBodyScroll } from '../lib/scrollLock';
+  import { dialogs } from '../lib/dialogs.svelte';
 
   interface Props {
     /**
@@ -53,7 +54,9 @@
   let abvInput: HTMLInputElement | undefined = $state();
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') onClose();
+    // Consistent with the other modals: defer Escape to a confirm
+    // dialog if one is open on top.
+    if (e.key === 'Escape' && !dialogs.current) onClose();
   }
 
   function validate(): AdhocBeerPayload | null {
@@ -151,8 +154,9 @@
         autocapitalize="words"
         required
         aria-invalid={nameError !== null}
+        aria-describedby={nameError ? 'adhoc-name-error' : undefined}
       />
-      {#if nameError}<span class="field-error">{nameError}</span>{/if}
+      {#if nameError}<span id="adhoc-name-error" class="field-error">{nameError}</span>{/if}
     </label>
 
     <label class="field">
@@ -168,8 +172,11 @@
         autocapitalize="words"
         required
         aria-invalid={breweryError !== null}
+        aria-describedby={breweryError ? 'adhoc-brewery-error' : undefined}
       />
-      {#if breweryError}<span class="field-error">{breweryError}</span>{/if}
+      {#if breweryError}
+        <span id="adhoc-brewery-error" class="field-error">{breweryError}</span>
+      {/if}
     </label>
 
     <div class="field-row">
@@ -183,8 +190,9 @@
           placeholder="5.2"
           autocomplete="off"
           aria-invalid={abvError !== null}
+          aria-describedby={abvError ? 'adhoc-abv-error' : undefined}
         />
-        {#if abvError}<span class="field-error">{abvError}</span>{/if}
+        {#if abvError}<span id="adhoc-abv-error" class="field-error">{abvError}</span>{/if}
       </label>
       <label class="field field-flex-3">
         <span class="field-label">Style</span>
