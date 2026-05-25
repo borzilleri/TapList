@@ -8,6 +8,20 @@
       name="description"
       content="TapList — the unofficial guide for the Washington Brewers Festival."
     />
+
+    <!--
+      PWA head links. vite-plugin-pwa injects <link rel="manifest"> automatically
+      but doesn't touch the other PWA head tags, so they live here. Theme color
+      matches manifest.theme_color and the app's --color-accent.
+    -->
+    <meta name="theme-color" content="#b8651b" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="TapList" />
+
     <title>TapList</title>
   </head>
   <body>

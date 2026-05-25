@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Placeholder PWA source icon for TapList. Rendered at multiple sizes by
+  @vite-pwa/assets-generator into pwa-192x192.png, pwa-512x512.png, the
+  maskable variant, the favicon, and the apple-touch-icon.
+
+  Polish-slice replacement: a properly designed brand icon. This is just
+  enough to install and look identifiable on a home screen.
+-->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  width="512"
+  height="512"
+>
+  <!-- Background: square with rounded corners. The maskable safe-zone
+       is the inner 80%, so the visible content stays well inside that. -->
+  <rect width="512" height="512" rx="96" fill="#1a1a1a" />
+
+  <!-- Pint glass silhouette, slightly tapered toward the bottom. -->
+  <g transform="translate(176 92)">
+    <!-- Glass outline -->
+    <path
+      d="M 0 0 L 160 0 L 144 320 Q 144 332 132 332 L 28 332 Q 16 332 16 320 Z"
+      fill="none"
+      stroke="#e8a25e"
+      stroke-width="14"
+      stroke-linejoin="round"
+    />
+    <!-- Beer fill (about 70% full) -->
+    <path
+      d="M 8 90 L 152 90 L 142 318 Q 142 326 134 326 L 26 326 Q 18 326 18 318 Z"
+      fill="#b8651b"
+    />
+    <!-- Foam (cap above fill line) -->
+    <path
+      d="M 4 70 Q 16 50 32 60 Q 48 50 64 60 Q 80 50 96 60 Q 112 50 128 60 Q 144 50 156 70 L 152 96 L 8 96 Z"
+      fill="#fef3e2"
+    />
+  </g>
+
+  <!-- Wordmark "TL" centered low on the glass body -->
+  <text
+    x="256"
+    y="320"
+    text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+    font-weight="700"
+    font-size="120"
+    fill="#fef3e2"
+    letter-spacing="-4"
+  >TL</text>
+</svg>
