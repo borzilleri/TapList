@@ -35,10 +35,14 @@
     importStatus = null,
   }: Props = $props();
 
-  const themeOptions: ReadonlyArray<{ value: ThemePreference; label: string }> = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'system', label: 'System' },
+  // Emoji picks: sun for light, crescent moon for dark, half-illuminated
+  // moon for system (it splits between the two, hinting at "follows
+  // whatever's outside"). aria-hidden on the icon means screen readers
+  // announce only the label.
+  const themeOptions: ReadonlyArray<{ value: ThemePreference; label: string; icon: string }> = [
+    { value: 'light', label: 'Light', icon: '☀️' },
+    { value: 'dark', label: 'Dark', icon: '🌙' },
+    { value: 'system', label: 'System', icon: '🌗' },
   ];
 
   let fileInput: HTMLInputElement | undefined = $state();
@@ -94,7 +98,8 @@
                 checked={theme === opt.value}
                 onchange={() => onSetTheme(opt.value)}
               />
-              <span>{opt.label}</span>
+              <span class="theme-icon" aria-hidden="true">{opt.icon}</span>
+              <span class="theme-label">{opt.label}</span>
             </label>
           {/each}
         </div>
@@ -280,6 +285,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.35rem;
     position: relative;
     padding: 0.5rem 0.4rem;
     font-size: 0.9rem;
@@ -287,6 +293,16 @@
     user-select: none;
     border-right: 1px solid var(--color-border);
     min-height: 40px;
+  }
+  .theme-icon {
+    font-size: 1rem;
+    line-height: 1;
+    /* Vertically nudge so the emoji baseline lines up with the label
+       — most platforms render moon/sun glyphs slightly above the line. */
+    transform: translateY(-0.05em);
+  }
+  .theme-label {
+    line-height: 1;
   }
   .theme-option:last-child {
     border-right: none;
