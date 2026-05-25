@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AdhocBeerPayload } from '../lib/types';
   import { focusTrap } from '../lib/focusTrap';
+  import { lockBodyScroll } from '../lib/scrollLock';
 
   interface Props {
     /**
@@ -124,6 +125,7 @@
     if (e.target === e.currentTarget) onClose();
   }}
   tabindex="-1"
+  use:lockBodyScroll
 >
   <form class="panel" onsubmit={handleSubmit} use:focusTrap>
     <header>

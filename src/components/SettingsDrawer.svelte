@@ -1,5 +1,6 @@
 <script lang="ts">
   import { focusTrap } from '../lib/focusTrap';
+  import { lockBodyScroll } from '../lib/scrollLock';
 
   interface Props {
     showNotPresent: boolean;
@@ -55,6 +56,7 @@
     if (e.target === e.currentTarget) onClose();
   }}
   tabindex="-1"
+  use:lockBodyScroll
 >
   <aside class="drawer" use:focusTrap>
     <header>

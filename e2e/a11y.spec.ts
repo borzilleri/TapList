@@ -94,6 +94,34 @@ const tests: TestCase[] = [
     },
   },
   {
+    name: 'Settings drawer: locks body scroll while open',
+    async run(page) {
+      // Make the body tall enough to actually have a scroll range so the
+      // "scroll didn't change" assertion is meaningful (the lock pins scroll
+      // at whatever value it was when the modal opened; we just need to
+      // verify that an attempted scroll AFTER the lock is no-op'd).
+      await page.evaluate(() => {
+        document.body.style.minHeight = '3000px';
+      });
+      await page.locator('button[aria-label="Settings"]').click();
+      await page.waitForTimeout(50);
+
+      const before = await page.evaluate(() => window.scrollY);
+      await page.evaluate(() => window.scrollBy(0, 800));
+      const after = await page.evaluate(() => window.scrollY);
+      assert(
+        before === after,
+        `Body scroll should be locked while modal open, but moved ${before}→${after}`,
+      );
+
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(50);
+      await page.evaluate(() => {
+        document.body.style.minHeight = '';
+      });
+    },
+  },
+  {
     name: 'Ad-hoc form: focus traps and returns to opener',
     async run(page) {
       const addBtn = page.locator('button[aria-label="Add a beer"]');

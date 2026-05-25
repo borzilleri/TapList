@@ -51,12 +51,15 @@ export function focusTrap(node: HTMLElement) {
   // only once the browser has run a layout pass.
   queueMicrotask(() => {
     const focusable = getFocusable(node);
+    // `preventScroll: true` avoids the browser auto-scrolling the focused
+    // element into view, which would fight the scroll-lock action (and on
+    // mobile would visibly jump the page just as the modal animates in).
     if (focusable.length > 0) {
-      focusable[0].focus();
+      focusable[0].focus({ preventScroll: true });
     } else {
       // Fallback so screen readers still announce the dialog title.
       node.setAttribute('tabindex', '-1');
-      node.focus();
+      node.focus({ preventScroll: true });
     }
   });
 
@@ -75,13 +78,13 @@ export function focusTrap(node: HTMLElement) {
       // Shift+Tab on the first element wraps to the last.
       if (active === first || !node.contains(active)) {
         e.preventDefault();
-        last.focus();
+        last.focus({ preventScroll: true });
       }
     } else {
       // Tab on the last element wraps to the first.
       if (active === last || !node.contains(active)) {
         e.preventDefault();
-        first.focus();
+        first.focus({ preventScroll: true });
       }
     }
   }
@@ -95,7 +98,7 @@ export function focusTrap(node: HTMLElement) {
       // current focus if they've already moved on (e.g. a programmatic
       // .focus() during teardown).
       if (previouslyFocused && document.body.contains(previouslyFocused)) {
-        previouslyFocused.focus();
+        previouslyFocused.focus({ preventScroll: true });
       }
     },
   };

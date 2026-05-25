@@ -2,6 +2,7 @@
   import { NOTES_MAX_LENGTH, type Beer, type BeerStatus, type Opinion } from '../lib/types';
   import type { UserStore } from '../lib/userStore.svelte';
   import { focusTrap } from '../lib/focusTrap';
+  import { lockBodyScroll } from '../lib/scrollLock';
 
   interface Props {
     beer: Beer;
@@ -76,6 +77,7 @@
     if (e.target === e.currentTarget) onClose();
   }}
   tabindex="-1"
+  use:lockBodyScroll
 >
   <div class="panel" role="document" use:focusTrap>
     <header>
