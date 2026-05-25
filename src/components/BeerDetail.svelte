@@ -3,6 +3,7 @@
   import type { UserStore } from '../lib/userStore.svelte';
   import { focusTrap } from '../lib/focusTrap';
   import { lockBodyScroll } from '../lib/scrollLock';
+  import { dialogs } from '../lib/dialogs.svelte';
 
   interface Props {
     beer: Beer;
@@ -22,13 +23,15 @@
     if (e.key === 'Escape') onClose();
   }
 
-  function handleDelete() {
-    // Confirmation kept simple — native confirm() reads as urgent on mobile
-    // and we don't have a custom dialog component yet (polish slice).
-    const ok = confirm(
-      `Delete "${beer.name}"? This removes it from your list permanently. ` +
+  async function handleDelete() {
+    const ok = await dialogs.confirm({
+      title: `Delete "${beer.name}"?`,
+      message:
+        `This removes the beer from your list permanently. ` +
         `If it's a real beer at the festival, marking it not-present hides it without deleting your data.`,
-    );
+      confirmLabel: 'Delete',
+      danger: true,
+    });
     if (ok) onDeleteAdhoc(beer.id);
   }
 

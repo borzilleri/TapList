@@ -16,6 +16,8 @@
   import SettingsDrawer from './components/SettingsDrawer.svelte';
   import AdhocBeerForm from './components/AdhocBeerForm.svelte';
   import PwaBanner from './components/PwaBanner.svelte';
+  import ConfirmDialog from './components/ConfirmDialog.svelte';
+  import { dialogs } from './lib/dialogs.svelte';
   import { mergeBeers } from './lib/list';
 
   // One shared user-data store, persisted to localStorage. Activated below
@@ -128,13 +130,28 @@
       return;
     }
 
-    const confirmMsg =
-      `Replace your current ratings, flags, and notes with ${result.applied} ` +
-      `entr${result.applied === 1 ? 'y' : 'ies'} from this file?\n\n` +
-      `This wipes everything you've done in the app so far. ` +
-      `${result.droppedUnknownId > 0 ? `${result.droppedUnknownId} row${result.droppedUnknownId === 1 ? '' : 's'} will be dropped because the beer isn't in the current dataset. ` : ''}` +
-      `${result.droppedInvalid > 0 ? `${result.droppedInvalid} row${result.droppedInvalid === 1 ? '' : 's'} will be dropped as invalid (missing required fields). ` : ''}`;
-    if (!confirm(confirmMsg)) {
+    const entryWord = result.applied === 1 ? 'entry' : 'entries';
+    const droppedParts: string[] = [];
+    if (result.droppedUnknownId > 0) {
+      const r = result.droppedUnknownId;
+      droppedParts.push(
+        `${r} row${r === 1 ? '' : 's'} will be dropped (beer not in current dataset)`,
+      );
+    }
+    if (result.droppedInvalid > 0) {
+      const r = result.droppedInvalid;
+      droppedParts.push(`${r} row${r === 1 ? '' : 's'} will be dropped (invalid)`);
+    }
+    const droppedNote = droppedParts.length > 0 ? `\n\n${droppedParts.join('; ')}.` : '';
+    const ok = await dialogs.confirm({
+      title: `Replace all your data with ${result.applied} ${entryWord}?`,
+      message:
+        `Importing wipes everything you've flagged, rated, or noted so far.` +
+        ` This can't be undone.${droppedNote}`,
+      confirmLabel: 'Replace',
+      danger: true,
+    });
+    if (!ok) {
       importStatus = 'Import cancelled.';
       return;
     }
@@ -246,6 +263,13 @@
 </main>
 
 <PwaBanner {pwa} />
+
+<!--
+  Confirm-dialog host. Reads from the dialogs singleton and renders the
+  modal whenever something has called `dialogs.confirm(...)`. Lives at the
+  app root so it's always available and stacks above other modals.
+-->
+<ConfirmDialog />
 
 {#if settingsOpen}
   <SettingsDrawer
