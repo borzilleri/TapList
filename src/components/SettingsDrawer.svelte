@@ -1,6 +1,12 @@
 <script lang="ts">
   import { focusTrap } from '../lib/focusTrap';
   import { lockBodyScroll } from '../lib/scrollLock';
+  import { isIosSafari, isStandalonePwa } from '../lib/platform';
+
+  // Captured on mount (rather than as a $derived) because the UA / standalone
+  // signals don't change across the lifetime of the drawer — and we don't
+  // want them recomputing on every render.
+  const showIosInstallHint = isIosSafari() && !isStandalonePwa();
 
   interface Props {
     showNotPresent: boolean;
@@ -112,6 +118,24 @@
         to confirm.
       </p>
     </section>
+
+    {#if showIosInstallHint}
+      <section class="group" aria-label="Install">
+        <h3 class="group-title">Install</h3>
+        <p class="group-desc">
+          Add TapList to your Home Screen for full-screen use and offline access at the festival.
+        </p>
+        <ol class="install-steps">
+          <li>
+            Tap the <strong>Share</strong> button
+            <span class="ios-share" aria-hidden="true">⎋</span>
+            at the bottom of Safari.
+          </li>
+          <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+          <li>Confirm the name and tap <strong>Add</strong>.</li>
+        </ol>
+      </section>
+    {/if}
 
     <p class="footer-note">
       More settings will live here in future versions — theming, dataset selection, etc.
@@ -285,6 +309,32 @@
     font-size: 0.78rem;
     color: var(--color-text-muted);
     line-height: 1.4;
+  }
+
+  .install-steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--color-text);
+  }
+  .install-steps li {
+    margin-bottom: 0.25rem;
+  }
+  .install-steps li:last-child {
+    margin-bottom: 0;
+  }
+  .install-steps strong {
+    font-weight: 600;
+  }
+  .ios-share {
+    display: inline-block;
+    transform: translateY(-0.05em);
+    /* The Unicode ⎋ glyph approximates iOS's Share icon (box + arrow). It
+       reads consistently across platforms even though it's not the real
+       SF Symbol Apple ships. */
+    color: var(--color-accent);
+    font-weight: 700;
   }
 
   .footer-note {
