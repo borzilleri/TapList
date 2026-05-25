@@ -230,8 +230,8 @@ async function fetchAndParseDataset(
 /**
  * Catalog entries may use absolute URLs (https://…) or root-relative URLs
  * (/data/foo.json). Root-relative paths must be re-anchored at the deployed
- * base path (e.g. `/TapList/` on GitHub Pages) so the same catalog ships
- * unchanged across hosting environments.
+ * base path so the same catalog ships unchanged across hosting environments
+ * (e.g. "/" on the custom domain vs. "/TapList/" on a project-path fallback).
  */
 function resolveDatasetUrl(entryUrl: string, baseUrl: string): string {
   if (/^https?:\/\//i.test(entryUrl)) return entryUrl;

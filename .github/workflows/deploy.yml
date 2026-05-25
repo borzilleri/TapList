@@ -25,12 +25,12 @@ jobs:
           node-version-file: '.nvmrc'
           cache: npm
       - run: npm ci
-      # vite.config.ts reads VITE_BASE_PATH so assets resolve under the
-      # GitHub Pages project path (e.g. /TapList/). When a custom domain
-      # is wired up this can be flipped back to "/".
+      # Site is served from the custom domain taplist.rampant.io at the
+      # apex, so assets resolve under "/" (vite.config.ts defaults to "/"
+      # when VITE_BASE_PATH is unset). The CNAME file in public/ is what
+      # tells GitHub Pages to keep the custom domain wired across
+      # workflow-based deploys.
       - name: Build
-        env:
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5

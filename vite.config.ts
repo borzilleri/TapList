@@ -15,8 +15,9 @@ export default defineConfig({
       // so the user gets a visible "reload to update" cue before the swap.
       registerType: 'autoUpdate',
       // Match the deployed base path so the manifest's start_url / scope
-      // resolve correctly under GitHub Pages (/TapList/) and under a future
-      // custom domain (/).
+      // resolve correctly. Defaults to "/" for the custom domain
+      // (taplist.rampant.io); the env var lets a project-path deploy
+      // override if we ever need one.
       base: BASE_PATH,
       scope: BASE_PATH,
       // Include the assets that aren't picked up by globPatterns by default
@@ -87,9 +88,9 @@ export default defineConfig({
       },
     }),
   ],
-  // GitHub Pages serves the site at https://<user>.github.io/<repo>/.
-  // The base path is set via env var so production builds resolve assets correctly
-  // while local dev (and a future custom domain) keep using the root.
+  // Production lives at https://taplist.rampant.io/ (GitHub Pages with a
+  // custom domain), so the base is "/". The env var stays parameterized
+  // so we can still build for a project-path deploy if we ever need to.
   base: BASE_PATH,
   // The `server` block only applies to `vite dev` / `vite preview` — it has
   // no effect on the production build. Keeping the LAN-access settings here
