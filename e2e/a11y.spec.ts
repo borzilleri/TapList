@@ -180,6 +180,45 @@ const tests: TestCase[] = [
     },
   },
   {
+    name: 'Empty state: filter-aware copy and Clear-search recovery',
+    async run(page) {
+      // Search-with-no-matches: the title should reference the query.
+      await page.locator('input[type="search"]').fill('definitely-no-such-beer-xyz');
+      await page.waitForTimeout(50);
+      const noMatchTitle = await page.locator('.empty-title').textContent();
+      assert(
+        noMatchTitle?.includes('definitely-no-such-beer-xyz'),
+        `Expected empty-state title to quote the search term, got ${JSON.stringify(noMatchTitle)}`,
+      );
+      // The Clear search button should reset the search and show rows again.
+      await page.locator('.empty-action').click();
+      await page.waitForTimeout(50);
+      const visibleAfterClear = await page.locator('article.row').count();
+      assert(
+        visibleAfterClear > 0,
+        `Expected rows to be visible after clearing search, got ${visibleAfterClear}`,
+      );
+
+      // Now: filter='toTry' with no flagged beers → encouraging copy, no button.
+      const toTryChip = page.locator('label.chip:has(input[value="toTry"])');
+      await toTryChip.click();
+      await page.waitForTimeout(50);
+      const toTryTitle = await page.locator('.empty-title').textContent();
+      assert(
+        toTryTitle?.toLowerCase().includes('to-try'),
+        `Expected to-try empty-state title, got ${JSON.stringify(toTryTitle)}`,
+      );
+      const buttonCount = await page.locator('.empty-action').count();
+      assert(
+        buttonCount === 0,
+        `Expected no Clear button on the to-try empty state, got ${buttonCount}`,
+      );
+
+      // Reset the filter for subsequent tests.
+      await page.locator('label.chip:has(input[value="all"])').click();
+    },
+  },
+  {
     name: 'Ad-hoc form: focus traps and returns to opener',
     async run(page) {
       const addBtn = page.locator('button[aria-label="Add a beer"]');
