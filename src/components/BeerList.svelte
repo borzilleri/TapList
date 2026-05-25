@@ -138,7 +138,7 @@
       </div>
 
       <div class="filter" role="radiogroup" aria-label="Filter">
-        {#each [{ value: 'all', label: 'All' }, { value: 'toTry', label: 'To try' }, { value: 'tried', label: 'Tried' }, { value: 'notTried', label: 'Not tried' }] as opt}
+        {#each [{ value: 'all', label: 'All' }, { value: 'toTry', label: 'To try' }, { value: 'tried', label: 'Tried' }, { value: 'notTried', label: 'Not tried' }] as opt (opt.value)}
           <label class="chip" class:active={filter === opt.value}>
             <input
               type="radio"

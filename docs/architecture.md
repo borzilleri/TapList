@@ -254,9 +254,5 @@ The shipped bundle has **zero runtime npm dependencies**. Svelte compiles to pla
 
 ## Known follow-ups
 
-These are intentionally not addressed in this audit pass — flagged here so the next pass picks them up:
-
-- **Major-version bumps** all currently held back: `vite` 6 → 8, `vitest` 2 → 4, `eslint` 9 → 10, `typescript` 5 → 6, `@sveltejs/vite-plugin-svelte` 5 → 7, `eslint-plugin-svelte` 2 → 3, `prettier-plugin-svelte` 3 → 4, `globals` 15 → 17, `eslint-config-prettier` 9 → 10, `@eslint/js` 9 → 10. Each is its own breaking-change pass.
-- **`npm audit` reports 5 moderate vulns**, all dev-only (chain: `esbuild ≤ 0.24.2` → vulnerable `vite` 5 → nested in `vitest` 2's tree). `npm audit --omit=dev` is clean: nothing in the shipped bundle is affected. Resolved by the `vitest` 2 → 4 bump.
 - **Visual brand pass.** The current icon is functional but generic; a designed mark is on the roadmap.
 - **Real WBF dataset.** The published list isn't out yet; once it is, the mock dataset in `public/data/` swaps over.
