@@ -171,6 +171,14 @@ export function parseImport({ csvText, datasetBeers }: ImportOptions): ImportRes
     const isAdhoc = parseBool(row.is_adhoc) || isAdhocId(id);
 
     if (isAdhoc) {
+      // Reject ad-hoc rows whose id collides with a real dataset beer.
+      // A well-formed export never produces this (ad-hoc ids carry the
+      // `adhoc-` prefix), but a hand-crafted CSV could try to overwrite
+      // a dataset entry's slot with an ad-hoc payload — drop those.
+      if (datasetIds.has(id)) {
+        droppedInvalid++;
+        continue;
+      }
       const adhoc = parseAdhocFromRow(row);
       if (!adhoc) {
         droppedInvalid++;
@@ -204,9 +212,15 @@ function stateFromRow(
   const tried = parseBool(row.tried);
   // Collapse the two boolean columns into the single in-memory status:
   // `tried` wins if both are checked (defensive against hand-edits).
-  const status = tried ? 'tried' : toTry ? 'toTry' : null;
+  let status: BeerUserState['status'] = tried ? 'tried' : toTry ? 'toTry' : null;
 
   const opinion = parseOpinion(row.opinion);
+  // Cascade invariant: opinion != null ⇒ status === 'tried'. The UI
+  // enforces this when a user picks like/dislike; we re-enforce it here
+  // so a CSV with stale or hand-edited values (e.g. tried=false +
+  // opinion=liked) can't produce a state the UI can't reach.
+  if (opinion !== null && status !== 'tried') status = 'tried';
+
   let notes = row.notes ?? '';
   if (notes.length > NOTES_MAX_LENGTH) notes = notes.slice(0, NOTES_MAX_LENGTH);
   const notPresent = parseBool(row.not_present);

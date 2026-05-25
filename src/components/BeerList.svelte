@@ -22,6 +22,16 @@
   // through the same search/sort/filter pipeline.
   const combined = $derived(mergeBeers(beers, store.all));
 
+  // The footer count's denominator: how many beers are *eligible* to be
+  // shown given the current settings, before search/filter narrow it
+  // further. When `showNotPresent` is off, beers the user marked
+  // not-present are hidden by buildRows AND should be excluded from
+  // the denominator — otherwise "Showing 3 of 20" reads wrong when 5
+  // of those 20 are invisibly hidden.
+  const visibleTotal = $derived(
+    showNotPresent ? combined.length : combined.filter((b) => !store.get(b.id).notPresent).length,
+  );
+
   const rows = $derived(
     buildRows(combined, store.all, {
       search,
@@ -181,7 +191,7 @@
       whatever the user was just doing.
     -->
     <p class="count" role="status" aria-live="polite">
-      Showing {rows.length} of {beers.length}
+      Showing {rows.length} of {visibleTotal}
     </p>
   {/if}
 </section>
