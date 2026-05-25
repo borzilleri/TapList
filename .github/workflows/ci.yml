@@ -20,3 +20,35 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
+
+      # End-to-end tests run against the production build via `vite preview`.
+      # Chromium binaries get cached between runs (key on the lockfile, so a
+      # playwright bump busts the cache); system deps are reinstalled every
+      # run since the runner is ephemeral.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright + Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        run: |
+          # Boot vite preview in the background, wait for it to respond,
+          # run the suite, then clean up. `set -e` so a failed test kills
+          # the step; trap ensures the preview server is killed regardless
+          # of how we exit (success, test failure, timeout).
+          set -e
+          npm run preview -- --port 4173 &
+          PREVIEW_PID=$!
+          trap 'kill $PREVIEW_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://localhost:4173; then
+              echo "preview ready"
+              break
+            fi
+            sleep 1
+          done
+          npm run test:e2e

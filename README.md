@@ -28,16 +28,19 @@ npm install
 
 ### Common commands
 
-| Command              | What it does                                       |
-| -------------------- | -------------------------------------------------- |
-| `npm run dev`        | Start the Vite dev server with HMR                 |
-| `npm run build`      | Type-check then produce a production bundle (dist) |
-| `npm run preview`    | Serve the production bundle locally                |
-| `npm test`           | Run the Vitest suite once                          |
-| `npm run test:watch` | Watch-mode tests                                   |
-| `npm run check`      | Run `svelte-check` (TS + Svelte type checking)     |
-| `npm run lint`       | ESLint + Prettier check                            |
-| `npm run format`     | Auto-format with Prettier                          |
+| Command              | What it does                                                          |
+| -------------------- | --------------------------------------------------------------------- |
+| `npm run dev`        | Start the Vite dev server with HMR                                    |
+| `npm run build`      | Type-check then produce a production bundle (dist)                    |
+| `npm run preview`    | Serve the production bundle locally                                   |
+| `npm test`           | Run the Vitest suite once                                             |
+| `npm run test:watch` | Watch-mode tests                                                      |
+| `npm run test:e2e`   | Run the Playwright a11y/interaction suite against a running `preview` |
+| `npm run check`      | Run `svelte-check` (TS + Svelte type checking)                        |
+| `npm run lint`       | ESLint + Prettier check                                               |
+| `npm run format`     | Auto-format with Prettier                                             |
+
+The e2e suite expects `npm run preview` to be running on port 4173. First run on a new machine also needs `npx playwright install chromium` to download the headless browser.
 
 ### Project structure
 
