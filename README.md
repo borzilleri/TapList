@@ -75,12 +75,58 @@ clearly-labeled mock data at `public/data/taplist-mock-2026.json`.
 
 ## Deployment
 
-Pushes to `main` automatically build and deploy to GitHub Pages via
-`.github/workflows/deploy.yml`. The production site is served from the
-custom domain [`taplist.rampant.io`](https://taplist.rampant.io/) — the
-`public/CNAME` file keeps that wired up across workflow-based deploys.
-`vite.config.ts` still respects `VITE_BASE_PATH` if a project-path fallback
-deploy ever becomes useful.
+The production site is served from the custom domain
+[`taplist.rampant.io`](https://taplist.rampant.io/) via GitHub Pages.
+Deploys are decoupled from pushes to `main` — they only fire when a
+GitHub Release is published (or on manual dispatch from the Actions UI).
+
+### Cutting a release
+
+Run the release script from `main` with a clean working tree:
+
+```sh
+npm run release -- patch          # 1.0.0 → 1.0.1
+npm run release -- minor          # 1.0.1 → 1.1.0
+npm run release -- major          # 1.1.0 → 2.0.0
+npm run release -- 1.0.0          # explicit; useful for the first release
+npm run release -- prerelease     # e.g. 1.0.0 → 1.0.0-0 (won't auto-deploy)
+```
+
+The script:
+
+1. Verifies the working tree is clean, you're on `main`, and `main` is in
+   sync with `origin/main`.
+2. Runs lint, the full test suite, and a production build as quality gates.
+3. Runs `npm version <bump>`, which writes the new version to
+   `package.json`, commits it, and creates a `v<version>` git tag.
+4. Pushes the commit and tag to `origin/main`.
+5. Calls `gh release create` to publish a GitHub Release, with notes
+   auto-generated from PR titles since the previous tag. Prerelease
+   versions (any tag containing a `-`, per semver) get the `--prerelease`
+   flag automatically.
+
+Publishing the release fires
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which
+checks out the tagged commit, builds, and ships to GitHub Pages.
+Prereleases are skipped — they exist for testing, not production.
+
+The `public/CNAME` file keeps the custom domain wired across deploys.
+`vite.config.ts` still respects `VITE_BASE_PATH` if a project-path
+fallback deploy ever becomes useful.
+
+### Rolling back or deploying a specific tag
+
+The deploy workflow accepts a manual dispatch with an optional tag input.
+From the GitHub Actions UI:
+
+1. Actions → Deploy to GitHub Pages → **Run workflow**.
+2. Enter the tag to deploy (e.g. `v1.0.0`), or leave it blank to deploy
+   the current `main` branch (useful as a hotfix escape hatch).
+3. Click **Run workflow**. The build job checks out that ref, rebuilds,
+   and redeploys.
+
+Redeploying an existing tag is idempotent — the artifact is byte-identical
+to what shipped originally. This is the rollback path.
 
 ## Documentation
 
