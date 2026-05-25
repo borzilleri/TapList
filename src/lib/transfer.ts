@@ -162,6 +162,11 @@ export function parseImport({ csvText, datasetBeers }: ImportOptions): ImportRes
   let droppedInvalid = 0;
 
   for (const row of csv.rows) {
+    // Skip fully-empty rows silently — these are typically trailing
+    // blank lines or commas-only rows from a sloppy editor. They're
+    // noise, not malformed data, so they don't belong in droppedInvalid.
+    if (isEmptyRow(row)) continue;
+
     const id = (row.id ?? '').trim();
     if (!id) {
       droppedInvalid++;
@@ -233,6 +238,13 @@ function stateFromRow(
 
   if (adhoc) state.adhoc = adhoc;
   return state;
+}
+
+function isEmptyRow(row: Record<string, string>): boolean {
+  for (const value of Object.values(row)) {
+    if (value && value.trim().length > 0) return false;
+  }
+  return true;
 }
 
 function parseAdhocFromRow(row: Record<string, string>): AdhocBeerPayload | null {

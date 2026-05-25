@@ -144,6 +144,21 @@
       return;
     }
 
+    if (result.applied === 0) {
+      // Some rows existed but none were importable. Skip the
+      // "Replace 0 entries?" confirm — there's nothing to replace
+      // with. Just report what happened.
+      const parts: string[] = ['Nothing to import.'];
+      if (result.droppedUnknownId > 0) {
+        parts.push(`${result.droppedUnknownId} dropped (unknown beer).`);
+      }
+      if (result.droppedInvalid > 0) {
+        parts.push(`${result.droppedInvalid} dropped (invalid).`);
+      }
+      importStatus = parts.join(' ');
+      return;
+    }
+
     const entryWord = result.applied === 1 ? 'entry' : 'entries';
     const droppedParts: string[] = [];
     if (result.droppedUnknownId > 0) {

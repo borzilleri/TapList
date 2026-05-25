@@ -276,6 +276,24 @@ describe('parseImport', () => {
     expect(result.droppedInvalid).toBe(1);
   });
 
+  it('silently skips fully-empty rows (trailing blank lines, commas-only)', () => {
+    // A trailing blank line is noise, not bad data — don't pollute the
+    // drop count with it.
+    const result = importCsv(
+      'id,is_adhoc,tried\r\n' + 'wbf26-0001,false,true\r\n' + ',,\r\n' + '\r\n',
+    );
+    expect(result.applied).toBe(1);
+    expect(result.droppedInvalid).toBe(0);
+    expect(result.droppedUnknownId).toBe(0);
+  });
+
+  it('still counts a row with content but no id as droppedInvalid', () => {
+    // Regression guard: an empty `id` cell is still invalid if the row
+    // carries other data — only fully-blank rows get skipped silently.
+    const result = importCsv('id,tried\r\n,true\r\n');
+    expect(result.droppedInvalid).toBe(1);
+  });
+
   it('infers is_adhoc from the id prefix when the column is missing', () => {
     // If the user hand-deletes the is_adhoc column, beers whose id starts
     // with `adhoc-` should still be treated as ad-hoc.
