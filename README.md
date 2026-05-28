@@ -1,3 +1,5 @@
+[![CI](https://github.com/borzilleri/TapList/actions/workflows/ci.yml/badge.svg)](https://github.com/borzilleri/TapList/actions/workflows/ci.yml)
+
 # TapList
 
 The unofficial guide for the Washington Brewers Festival.
