@@ -59,9 +59,12 @@ The catalog is a small JSON file at a fixed, same-origin URL (`/data/catalog.jso
 
 The app picks the active dataset on load by trying, in order:
 
-1. The entry whose `id` matches the `selectedDatasetId` value in localStorage. (Not set in v1 — reserved for the future selector.)
-2. The entry where `default: true`.
-3. The first entry in `datasets`.
+1. The entry whose `id` matches the `festivalId` query parameter in the page URL (`?festivalId=<id>`). This is the highest-priority signal so deep links and shared URLs override anything the user has saved.
+2. The entry whose `id` matches the `selectedDatasetId` value persisted in app settings (`taplist:settings`). This is what the user last loaded.
+3. The entry where `default: true`.
+4. The first entry in `datasets`.
+
+Whichever entry actually loads, the app then (a) persists its `id` back to `selectedDatasetId` and (b) `replaceState`s the URL to include `?festivalId=<id>`. This canonicalizes stale or missing identifiers — an unknown id in the URL silently falls back to a real one and the address bar updates to match, so the next reload or share doesn't repeat the miss.
 
 The selected entry's `url` is then fetched to load the dataset itself.
 

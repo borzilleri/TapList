@@ -32,7 +32,9 @@ Both files are cached locally after a successful fetch. On subsequent loads, the
 
 **First-load behavior.** On the very first load with no cache available, the app requires connectivity to bootstrap the catalog. If both the network fetch and the cache are unavailable, the app shows an error state explaining that an initial connection is needed. After the first successful load, the PWA service worker keeps everything available offline.
 
-**Selection rules (v1).** The catalog may list multiple datasets, but v1 does not expose a selector. The app picks, in order: (1) the dataset whose `id` matches a `selectedDatasetId` stored in localStorage (future feature; never set in v1), (2) the entry marked `default: true` in the catalog, (3) the first entry in the list. Selection is deterministic and invisible to the user.
+**Selection rules.** The catalog may list multiple datasets. The app picks, in order: (1) the dataset whose `id` matches the `festivalId` query parameter in the page URL, (2) the dataset whose `id` matches the `selectedDatasetId` persisted in app settings, (3) the entry marked `default: true` in the catalog, (4) the first entry in the list. Whichever loads, the app persists its `id` back to settings and rewrites the URL to include `?festivalId=<id>` — so the address bar is always a valid shareable link, and stale or unknown identifiers get silently canonicalized.
+
+**Deep-link sharing.** Because the active festival is encoded in the URL, copying the address bar and sending it to someone takes them straight to that festival, even if it isn't the catalog's default. The PWA's installed `start_url` is `/` (no festival), so launching the installed app drops you on whatever festival you last loaded; deep-linking is a browser activity.
 
 **Freshness indicator.** A subtle indicator near the top of the list shows when the active dataset was last successfully updated (e.g., "updated 5 min ago"). No manual refresh button.
 

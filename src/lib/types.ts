@@ -115,6 +115,13 @@ export interface AppSettings {
   showNotPresent: boolean;
   /** User's color scheme preference. Defaults to 'system'. */
   theme: ThemePreference;
+  /**
+   * The id of the dataset the user last loaded. Drives the boot resolution
+   * cascade after the URL parameter but before the catalog defaults. `null`
+   * means "no saved selection" (fresh install, or the user explicitly
+   * cleared it) — the app falls back to catalog.default or the first entry.
+   */
+  selectedDatasetId: string | null;
 }
 
 // --- View model: sort/filter/search state for the list view ---

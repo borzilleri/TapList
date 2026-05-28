@@ -57,6 +57,21 @@ describe('parseSettings', () => {
     const parsed = parseSettings({ version: 1, showNotPresent: false, theme });
     expect(parsed.theme).toBe(theme);
   });
+
+  it('defaults selectedDatasetId to null when missing', () => {
+    expect(parseSettings({ version: 1, showNotPresent: false }).selectedDatasetId).toBe(null);
+  });
+
+  it('coerces non-string selectedDatasetId to null', () => {
+    expect(parseSettings({ version: 1, selectedDatasetId: 42 }).selectedDatasetId).toBe(null);
+    expect(parseSettings({ version: 1, selectedDatasetId: '' }).selectedDatasetId).toBe(null);
+  });
+
+  it('reads selectedDatasetId when valid', () => {
+    expect(parseSettings({ version: 1, selectedDatasetId: 'wbf-2026' }).selectedDatasetId).toBe(
+      'wbf-2026',
+    );
+  });
 });
 
 describe('loadSettings + saveSettings', () => {
@@ -71,11 +86,17 @@ describe('loadSettings + saveSettings', () => {
 
   it('round-trips through save + load', () => {
     const storage = makeStorage();
-    saveSettings(storage, { version: 1, showNotPresent: true, theme: 'dark' });
+    saveSettings(storage, {
+      version: 1,
+      showNotPresent: true,
+      theme: 'dark',
+      selectedDatasetId: 'wbf-2026',
+    });
     expect(loadSettings(storage)).toEqual({
       version: 1,
       showNotPresent: true,
       theme: 'dark',
+      selectedDatasetId: 'wbf-2026',
     });
   });
 });
@@ -101,7 +122,12 @@ describe('SettingsStore', () => {
     expect(store.showNotPresent).toBe(true);
     const raw = storage.raw.get('taplist:settings');
     expect(raw).toBeDefined();
-    expect(JSON.parse(raw!)).toEqual({ version: 1, showNotPresent: true, theme: 'system' });
+    expect(JSON.parse(raw!)).toEqual({
+      version: 1,
+      showNotPresent: true,
+      theme: 'system',
+      selectedDatasetId: null,
+    });
   });
 
   it("defaults theme to 'system' on first run", () => {
@@ -138,5 +164,45 @@ describe('SettingsStore', () => {
     storage.raw.delete('taplist:settings');
     store.setShowNotPresent(true); // same value — should not write
     expect(storage.raw.has('taplist:settings')).toBe(false);
+  });
+
+  it('selectedDatasetId defaults to null on first run', () => {
+    expect(createSettingsStore(makeStorage()).selectedDatasetId).toBe(null);
+  });
+
+  it('setSelectedDatasetId persists immediately', () => {
+    const storage = makeStorage();
+    const store = createSettingsStore(storage);
+    store.setSelectedDatasetId('wbf-2026');
+    expect(store.selectedDatasetId).toBe('wbf-2026');
+    expect(JSON.parse(storage.raw.get('taplist:settings')!).selectedDatasetId).toBe('wbf-2026');
+  });
+
+  it('selectedDatasetId survives reload', () => {
+    const storage = makeStorage();
+    createSettingsStore(storage).setSelectedDatasetId('wbf-2026');
+    expect(createSettingsStore(storage).selectedDatasetId).toBe('wbf-2026');
+  });
+
+  it('clears selectedDatasetId when set to null', () => {
+    const storage = makeStorage();
+    const store = createSettingsStore(storage);
+    store.setSelectedDatasetId('wbf-2026');
+    store.setSelectedDatasetId(null);
+    expect(store.selectedDatasetId).toBe(null);
+    expect(JSON.parse(storage.raw.get('taplist:settings')!).selectedDatasetId).toBe(null);
+  });
+
+  it('hydrates selectedDatasetId from pre-existing settings without it', () => {
+    // Forward-compat: settings written before this field existed must
+    // still load cleanly. The field defaults to null.
+    const storage = makeStorage({
+      'taplist:settings': JSON.stringify({ version: 1, showNotPresent: true, theme: 'dark' }),
+    });
+    const store = createSettingsStore(storage);
+    expect(store.selectedDatasetId).toBe(null);
+    // And the other settings still load correctly.
+    expect(store.showNotPresent).toBe(true);
+    expect(store.theme).toBe('dark');
   });
 });
