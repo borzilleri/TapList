@@ -16,7 +16,12 @@ const STORAGE_KEY = 'taplist:settings';
 const CURRENT_VERSION = 1 as const;
 
 export function defaultSettings(): AppSettings {
-  return { version: CURRENT_VERSION, showNotPresent: false, theme: 'system' };
+  return {
+    version: CURRENT_VERSION,
+    showNotPresent: false,
+    theme: 'system',
+    selectedDatasetId: null,
+  };
 }
 
 function parseTheme(value: unknown): ThemePreference {
@@ -39,6 +44,10 @@ export function parseSettings(raw: unknown): AppSettings {
     version: CURRENT_VERSION,
     showNotPresent: obj.showNotPresent === true,
     theme: parseTheme(obj.theme),
+    selectedDatasetId:
+      typeof obj.selectedDatasetId === 'string' && obj.selectedDatasetId.length > 0
+        ? obj.selectedDatasetId
+        : null,
   };
 }
 
@@ -81,6 +90,16 @@ export class SettingsStore {
   setTheme(value: ThemePreference): void {
     if (this.data.theme === value) return;
     this.data = { ...this.data, theme: value };
+    saveSettings(this.storage, this.data);
+  }
+
+  get selectedDatasetId(): string | null {
+    return this.data.selectedDatasetId;
+  }
+
+  setSelectedDatasetId(value: string | null): void {
+    if (this.data.selectedDatasetId === value) return;
+    this.data = { ...this.data, selectedDatasetId: value };
     saveSettings(this.storage, this.data);
   }
 }

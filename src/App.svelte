@@ -20,6 +20,7 @@
   import LoadingSkeleton from './components/LoadingSkeleton.svelte';
   import { dialogs } from './lib/dialogs.svelte';
   import { mergeBeers } from './lib/list';
+  import { readFestivalId, urlWithFestivalId } from './lib/url';
 
   // One shared user-data store, persisted to localStorage. Activated below
   // once the dataset loads (the store namespaces storage by dataset id).
@@ -51,9 +52,29 @@
   /**
    * Load the catalog + dataset, then activate the user store for that
    * dataset's id. Returns the dataset so the template can render it.
+   *
+   * Resolution order for which festival to load:
+   *   1. `?festivalId=<id>` from the URL — highest priority, drives the
+   *      "share a link to a festival" UX.
+   *   2. `settingsStore.selectedDatasetId` — what the user last loaded.
+   *   3. The catalog's `default: true` entry, else the first entry.
+   *      (Both fallbacks live inside `loadActiveDataset`.)
+   *
+   * After the dataset resolves, we persist the loaded id back to settings
+   * AND replaceState the URL so it reflects what actually loaded — that
+   * way a stale/unknown id in the URL gets canonicalized to the real one
+   * silently, and the address bar is always a valid shareable link.
    */
   async function loadAndActivate(): Promise<Dataset> {
-    const result = await loadActiveDataset();
+    const urlId = readFestivalId(window.location.search);
+    const requestedId = urlId ?? settingsStore.selectedDatasetId;
+    const result = await loadActiveDataset(fetch, requestedId);
+    settingsStore.setSelectedDatasetId(result.dataset.id);
+    window.history.replaceState(
+      null,
+      '',
+      urlWithFestivalId(window.location.href, result.dataset.id),
+    );
     userStore.activate(result.dataset.id);
     return result.dataset;
   }
