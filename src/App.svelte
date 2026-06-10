@@ -379,6 +379,12 @@
     max-width: 720px;
     margin: 0 auto;
   }
+  /* Match the wider list column on tablet/desktop (see BeerList). */
+  @media (min-width: 768px) {
+    .header-row {
+      max-width: 960px;
+    }
+  }
   h1 {
     margin: 0;
     font-size: 1.5rem;
