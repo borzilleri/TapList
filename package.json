@@ -17,7 +17,7 @@
     "test:e2e": "tsx e2e/a11y.spec.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "pwa:icons": "pwa-assets-generator --preset minimal-2023 public/icon.svg",
+    "pwa:icons": "pwa-assets-generator",
     "release": "./scripts/release.sh"
   },
   "devDependencies": {
