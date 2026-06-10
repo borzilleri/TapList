@@ -202,6 +202,13 @@
     max-width: 720px;
     margin: 0 auto;
   }
+  /* Use the extra horizontal space on tablet/desktop, where rows also show
+     the full beer description inline. */
+  @media (min-width: 768px) {
+    .list-view {
+      max-width: 960px;
+    }
+  }
 
   .controls {
     display: flex;

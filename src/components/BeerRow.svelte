@@ -78,6 +78,9 @@
         {snippetParts.before}<mark>{snippetParts.match}</mark>{snippetParts.after}
       </p>
     {/if}
+    {#if vm.beer.description}
+      <p class="description">{vm.beer.description}</p>
+    {/if}
   </button>
   {#if vm.state.notPresent}
     <!--
@@ -225,6 +228,29 @@
     font-size: 0.85rem;
     color: var(--color-text-muted);
     line-height: 1.35;
+  }
+
+  /*
+   * Full description, shown inline only on wider screens (tablet/desktop),
+   * where there's room to read it without opening the detail modal. On small
+   * screens it stays hidden and the modal remains the way to read it.
+   */
+  .description {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .snippet {
+      /* The full description is shown below; the search excerpt would duplicate it. */
+      display: none;
+    }
+    .description {
+      display: block;
+      margin: 0.5rem 0 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--color-text);
+      white-space: pre-line;
+    }
   }
 
   .star {
