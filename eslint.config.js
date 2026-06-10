@@ -19,6 +19,7 @@ export default [
         ...globals.node,
         // Injected at build time via Vite's `define` (see vite.config.ts).
         __APP_VERSION__: 'readonly',
+        __APP_RELEASE_URL__: 'readonly',
       },
     },
     rules: {

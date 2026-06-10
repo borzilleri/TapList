@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "description": "The unofficial guide for the Washington Brewers Festival — a mobile-first, offline-capable PWA.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/borzilleri/TapList.git"
+  },
   "engines": {
     "node": ">=24"
   },

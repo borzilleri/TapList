@@ -277,7 +277,18 @@
       </button>
     </div>
   </div>
-  <p class="subtitle">TapList <span class="app-version">v{__APP_VERSION__}</span></p>
+  <p class="subtitle">
+    TapList
+    <a
+      class="app-version"
+      href={__APP_RELEASE_URL__}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="View release notes on GitHub"
+    >
+      v{__APP_VERSION__}
+    </a>
+  </p>
   {#await loadPromise then dataset}
     <FreshnessIndicator updatedAt={dataset.updatedAt} />
   {/await}
@@ -409,8 +420,20 @@
     font-size: 0.95rem;
   }
   .app-version {
+    color: inherit;
     opacity: 0.7;
     font-variant-numeric: tabular-nums;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  .app-version:hover {
+    opacity: 1;
+    color: var(--color-accent);
+  }
+  .app-version:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 
   .status {
