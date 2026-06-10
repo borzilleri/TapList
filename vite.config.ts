@@ -1,12 +1,25 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
+import pkg from './package.json';
 
 // Same path used at runtime by Vite to compute import.meta.env.BASE_URL.
 const BASE_PATH = process.env.VITE_BASE_PATH || '/';
 
+// GitHub release page for the current version. Releases are tagged `v<version>`
+// (see scripts/release.sh), so the header's version link resolves to the
+// matching release notes.
+const repoBase = pkg.repository.url.replace(/^git\+/, '').replace(/\.git$/, '');
+const RELEASE_URL = `${repoBase}/releases/tag/v${pkg.version}`;
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    // Surface the package version + its release page to the client bundle
+    // (shown as a link in the header).
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_RELEASE_URL__: JSON.stringify(RELEASE_URL),
+  },
   plugins: [
     svelte(),
     VitePWA({

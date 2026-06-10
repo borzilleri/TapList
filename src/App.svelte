@@ -247,7 +247,15 @@
 
 <header class="app-header">
   <div class="header-row">
-    <h1>TapList</h1>
+    <h1>
+      {#await loadPromise}
+        TapList
+      {:then dataset}
+        {dataset.festival ?? 'TapList'}
+      {:catch}
+        TapList
+      {/await}
+    </h1>
     <div class="header-actions">
       <button
         type="button"
@@ -269,10 +277,19 @@
       </button>
     </div>
   </div>
+  <p class="subtitle">
+    TapList
+    <a
+      class="app-version"
+      href={__APP_RELEASE_URL__}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="View release notes on GitHub"
+    >
+      v{__APP_VERSION__}
+    </a>
+  </p>
   {#await loadPromise then dataset}
-    {#if dataset.festival}
-      <p class="subtitle">{dataset.festival}</p>
-    {/if}
     <FreshnessIndicator updatedAt={dataset.updatedAt} />
   {/await}
 </header>
@@ -401,6 +418,22 @@
     margin: 0.15rem 0 0.25rem;
     color: var(--color-text-muted);
     font-size: 0.95rem;
+  }
+  .app-version {
+    color: inherit;
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  .app-version:hover {
+    opacity: 1;
+    color: var(--color-accent);
+  }
+  .app-version:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 
   .status {
