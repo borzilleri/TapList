@@ -1,12 +1,17 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
+import pkg from './package.json';
 
 // Same path used at runtime by Vite to compute import.meta.env.BASE_URL.
 const BASE_PATH = process.env.VITE_BASE_PATH || '/';
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    // Surface the package version to the client bundle (shown in the header).
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     svelte(),
     VitePWA({

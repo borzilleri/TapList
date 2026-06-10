@@ -247,7 +247,15 @@
 
 <header class="app-header">
   <div class="header-row">
-    <h1>TapList</h1>
+    <h1>
+      {#await loadPromise}
+        TapList
+      {:then dataset}
+        {dataset.festival ?? 'TapList'}
+      {:catch}
+        TapList
+      {/await}
+    </h1>
     <div class="header-actions">
       <button
         type="button"
@@ -269,10 +277,8 @@
       </button>
     </div>
   </div>
+  <p class="subtitle">TapList <span class="app-version">v{__APP_VERSION__}</span></p>
   {#await loadPromise then dataset}
-    {#if dataset.festival}
-      <p class="subtitle">{dataset.festival}</p>
-    {/if}
     <FreshnessIndicator updatedAt={dataset.updatedAt} />
   {/await}
 </header>
@@ -401,6 +407,10 @@
     margin: 0.15rem 0 0.25rem;
     color: var(--color-text-muted);
     font-size: 0.95rem;
+  }
+  .app-version {
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
   }
 
   .status {

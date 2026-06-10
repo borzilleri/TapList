@@ -17,6 +17,8 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
+        // Injected at build time via Vite's `define` (see vite.config.ts).
+        __APP_VERSION__: 'readonly',
       },
     },
     rules: {
