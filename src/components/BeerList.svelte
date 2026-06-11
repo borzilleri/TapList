@@ -180,6 +180,23 @@
     </div>
 
     {#if styleChips.length > 1}
+      <div class="style-select">
+        <label>
+          <span class="label">Style</span>
+          <select
+            value={styleCategory ?? ''}
+            onchange={(e) => {
+              const v = (e.currentTarget as HTMLSelectElement).value;
+              styleCategory = v === '' ? null : (v as StyleCategory);
+            }}
+          >
+            <option value="">All</option>
+            {#each styleChips as chip (chip.category)}
+              <option value={chip.category}>{chip.category} ({chip.count})</option>
+            {/each}
+          </select>
+        </label>
+      </div>
       <div class="filter style-filter" role="radiogroup" aria-label="Style">
         <span class="label">Style</span>
         <label class="chip" class:active={styleCategory === null}>
@@ -381,6 +398,42 @@
     font-size: 0.85rem;
     color: var(--color-text-muted);
     margin-right: 0.15rem;
+  }
+
+  /* Mobile shows a compact dropdown; tablet/desktop shows the chip row.
+     14 chips wrap to half the screen on a phone, so swap to a single
+     native select below the 768px breakpoint. */
+  .style-select {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .style-select label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .style-select .label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .style-select select {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    padding: 0.35rem 0.5rem;
+    font-size: 0.9rem;
+  }
+  .style-filter {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .style-select {
+      display: none;
+    }
+    .style-filter {
+      display: flex;
+    }
   }
   .chip-count {
     margin-left: 0.3rem;
