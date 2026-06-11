@@ -2,11 +2,9 @@
   "version": 1,
   "datasets": [
     {
-      "id": "wbf-2026",
-      "name": "Washington Brewers Festival 2026",
-      "url": "/data/wbf-2026.json",
-      "dates": { "start": "2026-06-13", "end": "2026-06-13" },
-      "location": "Fisher Pavilion & South Lawn, Seattle Center, Seattle, WA",
+      "id": "taplist-mock-2026",
+      "name": "TapList Mock Festival 2026",
+      "url": "/data/taplist-mock-2026.json",
       "status": "upcoming",
       "default": true
     }

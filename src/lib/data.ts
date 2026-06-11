@@ -11,6 +11,16 @@ import type { Beer, Catalog, CatalogEntry, Dataset } from './types';
 
 const CATALOG_URL = '/data/catalog.json';
 
+/**
+ * Base URL the catalog and relative dataset URLs are fetched from.
+ *
+ * Defaults to the app's own origin (`BASE_URL`), which is what local dev and the
+ * bundled `public/data/` dev fixture rely on. In production, `VITE_DATA_BASE_URL`
+ * points this at the standalone data site (GitHub Pages) so festival data can be
+ * published without redeploying the app.
+ */
+const DATA_BASE_URL = import.meta.env.VITE_DATA_BASE_URL || import.meta.env.BASE_URL;
+
 // --- Catalog -----------------------------------------------------------------
 
 /**
@@ -192,7 +202,7 @@ export interface LoadResult {
 export async function loadActiveDataset(
   fetchImpl: typeof fetch = fetch,
   selectedDatasetId: string | null = null,
-  baseUrl: string = import.meta.env.BASE_URL,
+  baseUrl: string = DATA_BASE_URL,
 ): Promise<LoadResult> {
   const catalog = await fetchAndParseCatalog(fetchImpl, baseUrl);
   const entry = selectDataset(catalog, selectedDatasetId);

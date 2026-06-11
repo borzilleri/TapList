@@ -10,6 +10,14 @@
     />
 
     <!--
+      The catalog + datasets are fetched cross-origin from the standalone data
+      site on first load (see VITE_DATA_BASE_URL). Warm the connection so the
+      TLS/TCP handshake overlaps app startup instead of blocking the catalog
+      fetch. No-op in dev, where data is same-origin.
+    -->
+    <link rel="preconnect" href="https://borzilleri.net" crossorigin />
+
+    <!--
       PWA head links. vite-plugin-pwa injects <link rel="manifest"> automatically
       but doesn't touch the other PWA head tags, so they live here. Theme color
       matches manifest.theme_color and the app's --color-accent.
