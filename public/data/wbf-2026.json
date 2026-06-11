@@ -159,7 +159,7 @@
       "brewery": "Barley POP! Brewing",
       "abv": 0,
       "style": "NA Hop Water",
-      "styleCategory": "Other",
+      "styleCategory": "NA",
       "description": "Our very refreshing house made hop water is sure to keep you hydrated through the summer heat and in between a brewski or twoski.\nThis batch is flavored with all natural hop extracts featuring Pineapple and Krush hops!\nNo alcohol, no sugar, no carbs, no bullshit!"
     },
     {
@@ -186,7 +186,7 @@
       "brewery": "Beach Cat Brewing",
       "abv": 0,
       "style": "Hop Water",
-      "styleCategory": "Other",
+      "styleCategory": "NA",
       "description": "Refreshing n/an option for all!"
     },
     {
@@ -515,7 +515,7 @@
       "name": "H2O Yeah Hop Water",
       "brewery": "Flying Lion Brewing",
       "style": "Hop Water",
-      "styleCategory": "Other"
+      "styleCategory": "NA"
     },
     {
       "id": "wbf26-0059",
@@ -585,7 +585,7 @@
       "name": "NA Hazy IPA",
       "brewery": "Fremont Brewing",
       "style": "Hazy IPA",
-      "styleCategory": "IPA"
+      "styleCategory": "NA"
     },
     {
       "id": "wbf26-0067",
@@ -883,7 +883,7 @@
       "name": "Zero to Hero",
       "brewery": "Kulshan Brewing Co.",
       "style": "N/A IPA",
-      "styleCategory": "IPA"
+      "styleCategory": "NA"
     },
     {
       "id": "wbf26-0101",
@@ -1170,7 +1170,7 @@
       "brewery": "Outer Planet Brewing",
       "abv": 0,
       "style": "Hoppy Seltzer",
-      "styleCategory": "Other"
+      "styleCategory": "NA"
     },
     {
       "id": "wbf26-0133",
@@ -1311,7 +1311,7 @@
       "name": "Propolis SPAH20",
       "brewery": "Propolis Brewing",
       "style": "Sparkling Botanical Hop Water",
-      "styleCategory": "Other"
+      "styleCategory": "NA"
     },
     {
       "id": "wbf26-0149",
@@ -1433,7 +1433,7 @@
       "name": "Ground Control - Cherry",
       "brewery": "Schilling & Starfall Cider",
       "style": "N/A Fruited Cider",
-      "styleCategory": "Cider"
+      "styleCategory": "NA"
     },
     {
       "id": "wbf26-0163",
@@ -1521,7 +1521,7 @@
       "name": "C.R.E.A.M. Soda",
       "brewery": "Slightly Furry",
       "style": "Vanilla Bean Soda",
-      "styleCategory": "Other"
+      "styleCategory": "NA"
     },
     {
       "id": "wbf26-0173",

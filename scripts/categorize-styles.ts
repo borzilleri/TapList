@@ -44,7 +44,7 @@ const RULES: Array<{ category: StyleCategory; keywords: string[] }> = [
   },
   {
     category: 'Other',
-    keywords: ['seltzer', 'hop water', 'kombucha', 'soda', 'tepache', 'shandy'],
+    keywords: ['seltzer', 'kombucha', 'tepache', 'shandy'],
   },
   {
     category: 'Sour & Gose',
@@ -129,14 +129,46 @@ function matchRules(text: unknown): StyleCategory | null {
 }
 
 /**
+ * Non-alcoholic detection, which wins over the style buckets: a beer is NA if
+ * its ABV is an explicit 0, or its `style`/`name` flags it — `N/A`, an `NA `
+ * prefix, `non-alc(oholic)`, or an inherently alcohol-free drink (hop water,
+ * soda). Hard seltzer/kombucha/tepache are NOT here — they carry alcohol.
+ */
+function isNonAlcoholic(abv: unknown, style: unknown, name: unknown): boolean {
+  if (abv === 0) return true;
+  for (const text of [style, name]) {
+    if (typeof text !== 'string') continue;
+    const s = text.toLowerCase();
+    if (
+      s.includes('n/a') ||
+      s.includes('non-alc') ||
+      s.includes('non alc') ||
+      s.includes('nonalc') ||
+      s.includes('alcohol-free') ||
+      s.includes('alcohol free') ||
+      s.includes('hop water') ||
+      s.includes('hop2o') ||
+      s.includes('spah2o') ||
+      s.includes('soda') ||
+      s === 'na' ||
+      s.startsWith('na ')
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Categorize from the `style` field; when it carries no signal at all (missing,
  * empty, or an unrecognized label like "Fruit Ale"), fall back to the beer's
  * `name`, which is concise and intentional — e.g. "Juniorzafa IPA" or "360
  * Blonde Ale". Descriptions are deliberately NOT consulted: they're prose and
  * keywords like "barrel" or "lager finish" produce false hits.
  */
-function categorize(id: string, rawStyle: unknown, name: unknown): StyleCategory {
+function categorize(id: string, rawStyle: unknown, name: unknown, abv: unknown): StyleCategory {
   if (OVERRIDES[id]) return OVERRIDES[id];
+  if (isNonAlcoholic(abv, rawStyle, name)) return 'NA';
   return matchRules(rawStyle) ?? matchRules(name) ?? 'Other';
 }
 
@@ -167,7 +199,7 @@ function processFile(path: string): void {
   }
   const tally = new Map<StyleCategory, number>(STYLE_CATEGORIES.map((c) => [c, 0]));
   data.beers = data.beers.map((beer) => {
-    const category = categorize(String(beer.id), beer.style, beer.name);
+    const category = categorize(String(beer.id), beer.style, beer.name, beer.abv);
     tally.set(category, (tally.get(category) ?? 0) + 1);
     return withCategory(beer, category);
   });
