@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type { Beer, BeerUserState, UserData } from './types';
-import { buildRows, mergeBeers, type BuildRowsOptions } from './list';
+import { buildRows, mergeBeers, styleCategoryFacets, type BuildRowsOptions } from './list';
 import { emptyUserData } from './storage';
 
 function beer(overrides: Partial<Beer> = {}): Beer {
@@ -14,6 +14,7 @@ function beer(overrides: Partial<Beer> = {}): Beer {
     brewery: 'Brewery',
     abv: 5.0,
     style: 'IPA',
+    styleCategory: 'IPA',
     location: 'Booth 1',
     description: null,
     ...overrides,
@@ -356,6 +357,7 @@ describe('mergeBeers (dataset + ad-hoc)', () => {
       brewery: 'Tiny Brew',
       abv: null,
       style: null,
+      styleCategory: null,
       location: null,
       description: null,
     });
@@ -368,5 +370,108 @@ describe('mergeBeers (dataset + ad-hoc)', () => {
     });
     const merged = mergeBeers([], data);
     expect(merged.map((b) => b.id)).toEqual(['adhoc-1']);
+  });
+});
+
+describe('buildRows — style-category filter', () => {
+  const beers = [
+    beer({ id: 'ipa', styleCategory: 'IPA' }),
+    beer({ id: 'lager', styleCategory: 'Lager & Pilsner' }),
+    beer({ id: 'sour', styleCategory: 'Sour & Gose' }),
+    beer({ id: 'uncat', styleCategory: null }),
+  ];
+
+  it('shows every beer when no style is active (null)', () => {
+    const ids = buildRows(beers, emptyUserData(), opts({ styleCategory: null })).map(
+      (r) => r.beer.id,
+    );
+    expect(ids.sort()).toEqual(['ipa', 'lager', 'sour', 'uncat']);
+  });
+
+  it('keeps only beers in the active category', () => {
+    const ids = buildRows(beers, emptyUserData(), opts({ styleCategory: 'IPA' })).map(
+      (r) => r.beer.id,
+    );
+    expect(ids).toEqual(['ipa']);
+  });
+
+  it("treats a null styleCategory as 'Other'", () => {
+    const ids = buildRows(beers, emptyUserData(), opts({ styleCategory: 'Other' })).map(
+      (r) => r.beer.id,
+    );
+    expect(ids).toEqual(['uncat']);
+  });
+
+  it('composes with search', () => {
+    const named = [
+      beer({ id: 'a', name: 'Citrus IPA', styleCategory: 'IPA' }),
+      beer({ id: 'b', name: 'Citrus Sour', styleCategory: 'Sour & Gose' }),
+    ];
+    const ids = buildRows(
+      named,
+      emptyUserData(),
+      opts({ search: 'citrus', styleCategory: 'IPA' }),
+    ).map((r) => r.beer.id);
+    expect(ids).toEqual(['a']);
+  });
+});
+
+describe('styleCategoryFacets', () => {
+  const beers = [
+    beer({ id: 'i1', styleCategory: 'IPA' }),
+    beer({ id: 'i2', styleCategory: 'IPA' }),
+    beer({ id: 'l1', styleCategory: 'Lager & Pilsner' }),
+    beer({ id: 'u1', styleCategory: null }),
+  ];
+
+  function facetMap(facets: Array<{ category: string; count: number }>) {
+    return Object.fromEntries(facets.map((f) => [f.category, f.count]));
+  }
+
+  it('counts each category and buckets null under Other', () => {
+    const m = facetMap(styleCategoryFacets(beers, emptyUserData(), { search: '', filter: 'all' }));
+    expect(m['IPA']).toBe(2);
+    expect(m['Lager & Pilsner']).toBe(1);
+    expect(m['Other']).toBe(1);
+  });
+
+  it('returns all categories in canonical order, including zero counts', () => {
+    const cats = styleCategoryFacets(beers, emptyUserData(), { search: '', filter: 'all' }).map(
+      (f) => f.category,
+    );
+    expect(cats[0]).toBe('IPA');
+    expect(cats).toContain('Wheat'); // present even with zero matches
+    expect(cats[cats.length - 1]).toBe('Other');
+  });
+
+  it('respects search but ignores the style filter (so counts stay stable)', () => {
+    const named = [
+      beer({ id: 'a', name: 'Hazy One', styleCategory: 'IPA' }),
+      beer({ id: 'b', name: 'Crisp One', styleCategory: 'Lager & Pilsner' }),
+    ];
+    const m = facetMap(
+      styleCategoryFacets(named, emptyUserData(), { search: 'hazy', filter: 'all' }),
+    );
+    expect(m['IPA']).toBe(1);
+    expect(m['Lager & Pilsner']).toBe(0);
+  });
+
+  it('respects the status filter', () => {
+    const data = userData({ i1: { status: 'tried' } });
+    const m = facetMap(styleCategoryFacets(beers, data, { search: '', filter: 'tried' }));
+    expect(m['IPA']).toBe(1);
+    expect(m['Lager & Pilsner']).toBe(0);
+  });
+
+  it('respects not-present hiding', () => {
+    const data = userData({ i2: { notPresent: true } });
+    const hidden = facetMap(
+      styleCategoryFacets(beers, data, { search: '', filter: 'all', showNotPresent: false }),
+    );
+    expect(hidden['IPA']).toBe(1);
+    const shown = facetMap(
+      styleCategoryFacets(beers, data, { search: '', filter: 'all', showNotPresent: true }),
+    );
+    expect(shown['IPA']).toBe(2);
   });
 });

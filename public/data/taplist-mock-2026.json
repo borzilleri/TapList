@@ -9,6 +9,7 @@
       "brewery": "Fremont Brewing",
       "abv": 5.2,
       "style": "Pilsner",
+      "styleCategory": "Lager & Pilsner",
       "location": "North Tent, Booth 12",
       "description": "A crisp, bright German-style pilsner brewed with Hallertau Mittelfrüh hops. Snappy bitterness, clean lager finish. Perfect for a sunny afternoon at the festival."
     },
@@ -16,8 +17,9 @@
       "id": "mock-0002",
       "name": "Slipstream IPA",
       "brewery": "Fremont Brewing",
-      "abv": 7.0,
+      "abv": 7,
       "style": "IPA",
+      "styleCategory": "IPA",
       "location": "North Tent, Booth 12",
       "description": "Our flagship Northwest IPA. Citra, Mosaic, and Simcoe build a juicy citrus core over a clean malt backbone."
     },
@@ -27,6 +29,7 @@
       "brewery": "Cloudburst Brewing",
       "abv": 6.8,
       "style": "Hazy IPA",
+      "styleCategory": "IPA",
       "location": "Main Pavilion, Booth 22",
       "description": "Soft and pillowy. Galaxy, Nelson Sauvin, and a touch of oats. Tropical fruit forward — passionfruit, mango, white grape."
     },
@@ -36,6 +39,7 @@
       "brewery": "Georgetown Brewing",
       "abv": 5.4,
       "style": "Pale Ale",
+      "styleCategory": "Pale Ale",
       "location": "North Tent, Booth 7",
       "description": "Session-friendly Seattle pale. Bright, hop-forward, refreshingly drinkable."
     },
@@ -45,6 +49,7 @@
       "brewery": "Reuben's Brews",
       "abv": 7.8,
       "style": "Stout",
+      "styleCategory": "Stout & Porter",
       "location": "South Tent, Booth 19",
       "description": "Robust, roasty, with notes of dark chocolate, coffee, and a whisper of vanilla. Smooth, dry finish."
     },
@@ -54,6 +59,7 @@
       "brewery": "Holy Mountain Brewing",
       "abv": 6.2,
       "style": "Saison",
+      "styleCategory": "Saison & Farmhouse",
       "location": "Specialty Tent, Booth 4",
       "description": "Brewed with sea salt and coriander. Funky, peppery, slightly briny. A summer farmhouse ale."
     },
@@ -63,6 +69,7 @@
       "brewery": "Stoup Brewing",
       "abv": 4.5,
       "style": "Gose",
+      "styleCategory": "Sour & Gose",
       "location": "South Tent, Booth 31",
       "description": "Light, tart, salty, with hints of lemon zest. Quenching on a hot day."
     },
@@ -72,6 +79,7 @@
       "brewery": "Bale Breaker Brewing",
       "abv": 6.5,
       "style": "IPA",
+      "styleCategory": "IPA",
       "location": "North Tent, Booth 8",
       "description": "Yakima Valley hops, full stop. Piney, resinous, and just bitter enough to make you reach for the next sip."
     },
@@ -79,8 +87,9 @@
       "id": "mock-0009",
       "name": "Old Growth Porter",
       "brewery": "Black Raven Brewing",
-      "abv": 6.0,
+      "abv": 6,
       "style": "Porter",
+      "styleCategory": "Stout & Porter",
       "location": "South Tent, Booth 24",
       "description": "Cocoa, espresso, and a touch of caramel. Roasty without being heavy."
     },
@@ -90,6 +99,7 @@
       "brewery": "Lucky Envelope Brewing",
       "abv": 5.8,
       "style": "Brown Ale",
+      "styleCategory": "Amber, Brown & Dark",
       "location": "North Tent, Booth 15",
       "description": "Toasty, nutty, with a kiss of brown sugar. The kind of beer you bring to a campfire."
     },
@@ -99,6 +109,7 @@
       "brewery": "Schooner Exact Brewing",
       "abv": 5.6,
       "style": "ESB",
+      "styleCategory": "Amber, Brown & Dark",
       "location": "Main Pavilion, Booth 28"
     },
     {
@@ -107,6 +118,7 @@
       "brewery": "Optimism Brewing",
       "abv": 4.8,
       "style": "Lager",
+      "styleCategory": "Lager & Pilsner",
       "location": "North Tent, Booth 19",
       "description": "An unpretentious helles-style lager. Bready malt, soft floral hop, clean finish."
     },
@@ -116,6 +128,7 @@
       "brewery": "Standard Brewing",
       "abv": 5.2,
       "style": "Hefeweizen",
+      "styleCategory": "Wheat",
       "location": "Main Pavilion, Booth 14",
       "description": "Banana, clove, and a fluffy wheat body. Unfiltered and proud of it."
     },
@@ -123,8 +136,9 @@
       "id": "mock-0014",
       "name": "Compass Rose Tripel",
       "brewery": "Boundary Bay Brewing",
-      "abv": 9.0,
+      "abv": 9,
       "style": "Belgian Tripel",
+      "styleCategory": "Belgian & Strong",
       "location": "Specialty Tent, Booth 11",
       "description": "Golden, effervescent, dangerously drinkable. Spicy yeast, pear, and a long dry finish."
     },
@@ -134,6 +148,7 @@
       "brewery": "Two Beers Brewing",
       "abv": 5.5,
       "style": "Amber Ale",
+      "styleCategory": "Amber, Brown & Dark",
       "location": "North Tent, Booth 5"
     },
     {
@@ -142,6 +157,7 @@
       "brewery": "Silver City Brewery",
       "abv": 4.8,
       "style": "Witbier",
+      "styleCategory": "Wheat",
       "location": "Main Pavilion, Booth 9",
       "description": "Coriander, orange peel, soft wheat. Light and aromatic — a porch beer."
     },
@@ -151,6 +167,7 @@
       "brewery": "Iron Horse Brewery",
       "abv": 5.1,
       "style": "Pale Ale",
+      "styleCategory": "Pale Ale",
       "location": "North Tent, Booth 17",
       "description": "A clean, accessible American pale ale. Cascade hops, biscuit malt, no surprises — just well-made beer."
     },
@@ -160,6 +177,7 @@
       "brewery": "Aslan Brewing",
       "abv": 10.5,
       "style": "Triple IPA",
+      "styleCategory": "IPA",
       "location": "Specialty Tent, Booth 2",
       "description": "Three hops, ten alcohol, zero apologies. Big citrus, big resin, big finish. Sip slowly."
     },
@@ -169,6 +187,7 @@
       "brewery": "Pike Brewing",
       "abv": 4.9,
       "style": "Helles Lager",
+      "styleCategory": "Lager & Pilsner",
       "location": "North Tent, Booth 21",
       "description": "A traditional Bavarian-style helles. Soft, slightly sweet, very drinkable."
     },
@@ -178,6 +197,7 @@
       "brewery": "Bellevue Brewing",
       "abv": 6.4,
       "style": "Oatmeal Stout",
+      "styleCategory": "Stout & Porter",
       "location": "South Tent, Booth 13",
       "description": "Smooth and silky from a generous oat addition. Chocolate, coffee, and a hint of toasted bread."
     },
@@ -187,6 +207,7 @@
       "brewery": "Silver City Brewery",
       "abv": 5.7,
       "style": "Amber Ale",
+      "styleCategory": "Amber, Brown & Dark",
       "location": "Main Pavilion, Booth 9",
       "description": "Toffee and caramel malts balanced by a clean hop bitterness. The amber you remember."
     },
@@ -196,6 +217,7 @@
       "brewery": "Holy Mountain Brewing",
       "abv": 7.5,
       "style": "Wild Ale",
+      "styleCategory": "Sour & Gose",
       "location": "Specialty Tent, Booth 4",
       "description": "Aged 18 months in oak foeders. Funky, tart, with notes of green apple and pinot grapes. A standout for sour drinkers."
     },
@@ -205,6 +227,7 @@
       "brewery": "Tieton Cider Works",
       "abv": 6.9,
       "style": "Cider",
+      "styleCategory": "Cider",
       "location": "Cider Hall, Booth 3",
       "description": "Dry, crisp, made from Pacific Northwest heirloom apples. Subtle tannins, bright acidity."
     },
@@ -214,6 +237,7 @@
       "brewery": "Snowdrift Cider",
       "abv": 6.5,
       "style": "Cider",
+      "styleCategory": "Cider",
       "location": "Cider Hall, Booth 5",
       "description": "Off-dry and approachable. Honeycrisp and Gravenstein blend."
     },
@@ -221,8 +245,9 @@
       "id": "mock-0025",
       "name": "Smoked Cherry Cider",
       "brewery": "Locust Cider",
-      "abv": 6.0,
+      "abv": 6,
       "style": "Cider",
+      "styleCategory": "Cider",
       "location": "Cider Hall, Booth 1",
       "description": "Cherry juice with a kiss of smoked malt. Unusual, slightly polarizing, worth seeking out."
     },
@@ -232,6 +257,7 @@
       "brewery": "Fremont Brewing",
       "abv": 12.5,
       "style": "Barleywine",
+      "styleCategory": "Belgian & Strong",
       "location": "Specialty Tent, Booth 7",
       "description": "Aged in bourbon barrels for 12 months. Vanilla, oak, dried fruit, a long warming finish. Pour small, drink slow."
     },
@@ -240,14 +266,16 @@
       "name": "Heather Scotch Ale",
       "brewery": "Black Raven Brewing",
       "location": "South Tent, Booth 24",
-      "description": "A small-batch wee heavy brewed with heather tips. Layered caramel and a soft floral note."
+      "description": "A small-batch wee heavy brewed with heather tips. Layered caramel and a soft floral note.",
+      "styleCategory": "Other"
     },
     {
       "id": "mock-0028",
       "name": "Sundown Berliner",
       "brewery": "Cloudburst Brewing",
-      "abv": 4.0,
+      "abv": 4,
       "style": "Berliner Weisse",
+      "styleCategory": "Sour & Gose",
       "location": "Main Pavilion, Booth 22"
     },
     {
@@ -256,6 +284,7 @@
       "brewery": "Lucky Envelope Brewing",
       "abv": 9.5,
       "style": "Imperial Porter",
+      "styleCategory": "Stout & Porter",
       "location": "South Tent, Booth 15",
       "description": "Toasted coconut, dark chocolate, and a touch of vanilla. Dessert in a glass."
     },
@@ -263,7 +292,8 @@
       "id": "mock-0030",
       "name": "Last-Minute Lager",
       "brewery": "Mystery Brewing Co.",
-      "description": "Brewery and recipe announced day-of. Watch the board near the entrance for details."
+      "description": "Brewery and recipe announced day-of. Watch the board near the entrance for details.",
+      "styleCategory": "Other"
     },
     {
       "id": "mock-0031",
@@ -271,6 +301,7 @@
       "brewery": "Riverbend Brewing",
       "abv": "6.5%",
       "style": "IPA",
+      "styleCategory": "IPA",
       "location": "North Tent, Booth 33",
       "description": "Old-school West Coast IPA with assertive bittering hops. ABV in source data includes the percent sign — the importer should treat this as missing rather than choking."
     },
@@ -280,6 +311,7 @@
       "brewery": "Lowlands Brewing",
       "abv": "5-7",
       "style": "Saison",
+      "styleCategory": "Saison & Farmhouse",
       "location": "Specialty Tent, Booth 14",
       "description": "Source data publishes an ABV range instead of a single number. App should fall back to no ABV."
     },
@@ -289,6 +321,7 @@
       "brewery": "Skagit Smokehouse",
       "abv": "TBD",
       "style": "Rauchbier",
+      "styleCategory": "Lager & Pilsner",
       "location": "Specialty Tent, Booth 9",
       "description": "Beechwood-smoked malts. Bacon-forward. ABV was a placeholder string in the published list."
     },
@@ -297,21 +330,24 @@
       "name": "Late Addition Pale",
       "brewery": "Lowlands Brewing",
       "abv": "~5.2",
-      "location": "Specialty Tent, Booth 14"
+      "location": "Specialty Tent, Booth 14",
+      "styleCategory": "Other"
     },
     {
       "id": "mock-0035",
       "name": "Estimate Stout",
       "brewery": "Skagit Smokehouse",
       "abv": null,
-      "location": "Specialty Tent, Booth 9"
+      "location": "Specialty Tent, Booth 9",
+      "styleCategory": "Other"
     },
     {
       "id": "mock-0036",
       "name": "Vault Reserve Quad",
       "brewery": "Abbey Lane Brewing",
-      "abv": 11.0,
+      "abv": 11,
       "style": "Belgian Quad",
+      "styleCategory": "Belgian & Strong",
       "location": "Specialty Tent, Booth 8"
     }
   ]

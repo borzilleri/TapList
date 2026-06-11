@@ -121,6 +121,7 @@ function adhocStateAsBeer(id: string, payload: AdhocBeerPayload): Beer {
     brewery: payload.brewery,
     abv: typeof payload.abv === 'number' && Number.isFinite(payload.abv) ? payload.abv : null,
     style: payload.style ?? null,
+    styleCategory: null,
     location: payload.location ?? null,
     description: payload.description ?? null,
   };

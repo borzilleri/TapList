@@ -6,6 +6,7 @@
  * only where the spec demands it (required identity fields).
  */
 
+import { isStyleCategory } from './types';
 import type { Beer, Catalog, CatalogEntry, Dataset } from './types';
 
 const CATALOG_URL = '/data/catalog.json';
@@ -163,6 +164,9 @@ function parseBeer(raw: unknown, index: number): Beer | null {
     brewery: b.brewery,
     abv,
     style: typeof b.style === 'string' && b.style.length > 0 ? b.style : null,
+    // styleCategory: accept only a known category; anything else (missing,
+    // unknown string) collapses to null and is treated as "Other" downstream.
+    styleCategory: isStyleCategory(b.styleCategory) ? b.styleCategory : null,
     location: typeof b.location === 'string' && b.location.length > 0 ? b.location : null,
     description:
       typeof b.description === 'string' && b.description.length > 0 ? b.description : null,

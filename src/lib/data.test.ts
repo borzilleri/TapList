@@ -204,6 +204,31 @@ describe('parseDataset', () => {
     expect(beer.location).toBeNull();
     expect(beer.description).toBeNull();
   });
+
+  describe('styleCategory', () => {
+    function parseOne(styleCategory: unknown) {
+      const beer = { id: 'a', name: 'A', brewery: 'B' } as Record<string, unknown>;
+      if (styleCategory !== undefined) beer.styleCategory = styleCategory;
+      return parseDataset({ id: 'x', beers: [beer] })!.beers[0];
+    }
+
+    it('accepts a known category', () => {
+      expect(parseOne('Lager & Pilsner').styleCategory).toBe('Lager & Pilsner');
+    });
+
+    it('collapses an unknown string to null', () => {
+      expect(parseOne('Imperial Mango Sludge').styleCategory).toBeNull();
+    });
+
+    it('defaults missing to null', () => {
+      expect(parseOne(undefined).styleCategory).toBeNull();
+    });
+
+    it('collapses non-string values to null', () => {
+      expect(parseOne(42).styleCategory).toBeNull();
+      expect(parseOne(null).styleCategory).toBeNull();
+    });
+  });
 });
 
 // --- Fetch orchestration -----------------------------------------------------
