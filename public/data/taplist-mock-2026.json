@@ -1,4 +1,5 @@
 {
+  "$schema": "https://borzilleri.net/taplist-data/schema/dataset.schema.json",
   "id": "taplist-mock-2026",
   "festival": "TapList Mock Festival 2026",
   "updatedAt": "2026-06-10T14:00:00Z",
