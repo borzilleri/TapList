@@ -76,7 +76,7 @@ If the catalog entry's `id` doesn't match the `id` inside the fetched dataset JS
 
 The dataset is a JSON file containing a list of beers wrapped in an object that carries dataset-level metadata (notably the stable `id`).
 
-A machine-readable JSON Schema for this shape lives at [`public/schema/dataset.schema.json`](../public/schema/dataset.schema.json) and is published at [`https://taplist.rampant.io/schema/dataset.schema.json`](https://taplist.rampant.io/schema/dataset.schema.json). Dataset authors can reference it via a top-level `"$schema": "https://taplist.rampant.io/schema/dataset.schema.json"` for IDE autocomplete and inline validation. The schema codifies the canonical contract; the runtime parser is intentionally more lenient on optional fields (see "Validation behavior" below).
+A machine-readable JSON Schema for this shape lives in the [`taplist-data`](https://github.com/borzilleri/taplist-data) repo (alongside the datasets it validates) at `schema/dataset.schema.json`, published at [`https://borzilleri.net/taplist-data/schema/dataset.schema.json`](https://borzilleri.net/taplist-data/schema/dataset.schema.json). Datasets reference it via a top-level `"$schema"` for IDE autocomplete and inline validation, and dataset PRs are validated against it in CI. The schema codifies the canonical contract; the runtime parser is intentionally more lenient on optional fields (see "Validation behavior" below) and does not load the schema at runtime.
 
 ### Shape
 
