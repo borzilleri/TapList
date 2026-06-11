@@ -70,7 +70,7 @@
         <span class="style">{vm.beer.style}</span>
       {/if}
       {#if vm.beer.location}
-        <span class="location">{vm.beer.location}</span>
+        <span class="location">Loc: {vm.beer.location}</span>
       {/if}
     </div>
     {#if snippetParts}
