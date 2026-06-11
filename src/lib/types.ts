@@ -26,6 +26,40 @@ export interface Catalog {
 // --- Dataset (one festival's beer list) ---
 
 /**
+ * The normalized, filterable style buckets. The raw `style` field is too messy
+ * and inconsistent to filter on (140+ distinct values in WBF 2026), so each
+ * beer carries a `styleCategory` from this fixed set instead. The array order
+ * is the canonical display order for the style filter chips.
+ *
+ * `'NA'` collects non-alcoholic drinks (0% ABV, hop water, soda, N/A beers).
+ * `'Other'` is the catch-all for the remaining hard adjacents (seltzer,
+ * kombucha, tepache, shandy) and anything the categorizer can't place.
+ */
+export const STYLE_CATEGORIES = [
+  'IPA',
+  'Pale Ale',
+  'Lager & Pilsner',
+  'Wheat',
+  'Stout & Porter',
+  'Sour & Gose',
+  'Saison & Farmhouse',
+  'Belgian & Strong',
+  'Amber, Brown & Dark',
+  'Blonde, Kölsch & Cream',
+  'Cider',
+  'Wine & Mead',
+  'NA',
+  'Other',
+] as const;
+
+export type StyleCategory = (typeof STYLE_CATEGORIES)[number];
+
+/** Type guard for the lenient parser and any untrusted input. */
+export function isStyleCategory(value: unknown): value is StyleCategory {
+  return typeof value === 'string' && (STYLE_CATEGORIES as readonly string[]).includes(value);
+}
+
+/**
  * A beer as exposed to the rest of the app. ABV is a number-or-null after
  * validation — invalid/missing/unparseable ABV in the source JSON all collapse
  * to null here.
@@ -36,6 +70,12 @@ export interface Beer {
   brewery: string;
   abv: number | null;
   style: string | null;
+  /**
+   * Normalized style bucket for filtering, baked into the dataset. `null` when
+   * the dataset omits it (e.g. ad-hoc beers) — treated as `'Other'` by the list
+   * view's style filter.
+   */
+  styleCategory: StyleCategory | null;
   location: string | null;
   description: string | null;
 }
@@ -143,6 +183,8 @@ export interface ListViewState {
   sort: SortKey;
   sortDirection: SortDirection;
   filter: FilterMode;
+  /** Active style-category filter; `null` means "all styles". Independent of `filter`. */
+  styleCategory: StyleCategory | null;
   search: string;
   showNotPresent: boolean;
 }

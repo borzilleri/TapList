@@ -20,6 +20,7 @@ function beer(overrides: Partial<Beer> = {}): Beer {
     brewery: 'Brewery',
     abv: 5.0,
     style: 'IPA',
+    styleCategory: 'IPA',
     location: 'Booth 1',
     description: null,
     ...overrides,

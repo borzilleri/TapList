@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Beer, FilterMode, SortDirection, SortKey } from '../lib/types';
+  import type { Beer, FilterMode, SortDirection, SortKey, StyleCategory } from '../lib/types';
   import type { UserStore } from '../lib/userStore.svelte';
-  import { buildRows, mergeBeers } from '../lib/list';
+  import { buildRows, mergeBeers, styleCategoryFacets } from '../lib/list';
   import BeerRow from './BeerRow.svelte';
 
   interface Props {
@@ -17,6 +17,7 @@
   let sort = $state<SortKey>('brewery');
   let sortDirection = $state<SortDirection>('asc');
   let filter = $state<FilterMode>('all');
+  let styleCategory = $state<StyleCategory | null>(null);
 
   // Combine dataset beers with the user's ad-hoc additions so both flow
   // through the same search/sort/filter pipeline.
@@ -38,8 +39,19 @@
       filter,
       sort,
       direction: sortDirection,
+      styleCategory,
       showNotPresent,
     }),
+  );
+
+  // Faceted counts for the style chips: each count reflects search + status +
+  // not-present, but NOT the style filter itself. We render only categories
+  // that have matches (plus the active one, so it can always be deselected),
+  // and hide the whole row when there's nothing meaningful to choose between.
+  const styleChips = $derived(
+    styleCategoryFacets(combined, store.all, { search, filter, showNotPresent }).filter(
+      (f) => f.count > 0 || f.category === styleCategory,
+    ),
   );
 
   function onToggleToTry(beerId: string) {
@@ -67,9 +79,13 @@
    */
   const emptyState = $derived.by((): { title: string; hint?: string } => {
     const q = search.trim();
+    const prefix = { all: '', toTry: 'to-try ', tried: 'tried ', notTried: 'untried ' }[filter];
+    const styleSuffix = styleCategory ? ` in ${styleCategory}` : '';
     if (q.length > 0) {
-      const prefix = { all: '', toTry: 'to-try ', tried: 'tried ', notTried: 'untried ' }[filter];
-      return { title: `No ${prefix}beers match “${q}”.` };
+      return { title: `No ${prefix}beers${styleSuffix} match “${q}”.` };
+    }
+    if (styleCategory) {
+      return { title: `No ${prefix}beers in ${styleCategory}.` };
     }
     if (filter === 'toTry') {
       return {
@@ -162,6 +178,32 @@
         {/each}
       </div>
     </div>
+
+    {#if styleChips.length > 1}
+      <div class="filter style-filter" role="radiogroup" aria-label="Style">
+        <span class="label">Style</span>
+        <label class="chip" class:active={styleCategory === null}>
+          <input
+            type="radio"
+            name="style"
+            checked={styleCategory === null}
+            onchange={() => (styleCategory = null)}
+          />
+          <span>All</span>
+        </label>
+        {#each styleChips as chip (chip.category)}
+          <label class="chip" class:active={styleCategory === chip.category}>
+            <input
+              type="radio"
+              name="style"
+              checked={styleCategory === chip.category}
+              onchange={() => (styleCategory = chip.category)}
+            />
+            <span>{chip.category} <span class="chip-count">{chip.count}</span></span>
+          </label>
+        {/each}
+      </div>
+    {/if}
   </div>
 
   {#if rows.length === 0}
@@ -329,6 +371,21 @@
     background: var(--color-accent);
     border-color: var(--color-accent);
     color: var(--color-on-accent);
+  }
+
+  /* Style filter: same chips, preceded by a muted label, on its own row. */
+  .style-filter {
+    align-items: center;
+  }
+  .style-filter .label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-right: 0.15rem;
+  }
+  .chip-count {
+    margin-left: 0.3rem;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.65;
   }
 
   .rows {

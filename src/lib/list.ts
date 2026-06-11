@@ -6,8 +6,16 @@
  * in any order without surprise interactions.
  */
 
-import { EMPTY_BEER_USER_STATE } from './types';
-import type { Beer, BeerUserState, FilterMode, SortDirection, SortKey, UserData } from './types';
+import { EMPTY_BEER_USER_STATE, STYLE_CATEGORIES } from './types';
+import type {
+  Beer,
+  BeerUserState,
+  FilterMode,
+  SortDirection,
+  SortKey,
+  StyleCategory,
+  UserData,
+} from './types';
 
 /**
  * Combine the dataset's beer list with any ad-hoc beers the user has
@@ -33,6 +41,8 @@ function adhocAsBeer(id: string, payload: { name: string; brewery: string } & Pa
     brewery: payload.brewery,
     abv: payload.abv ?? null,
     style: payload.style ?? null,
+    // Ad-hoc beers carry no normalized category; null buckets them under "Other".
+    styleCategory: null,
     location: payload.location ?? null,
     description: payload.description ?? null,
   };
@@ -55,6 +65,8 @@ export interface BuildRowsOptions {
   filter: FilterMode;
   sort: SortKey;
   direction?: SortDirection;
+  /** Active style-category filter; `null`/omitted means "all styles". */
+  styleCategory?: StyleCategory | null;
   /** When true, beers marked `notPresent` are included; otherwise hidden. */
   showNotPresent?: boolean;
 }
@@ -73,17 +85,57 @@ export function buildRows(
   userData: UserData,
   options: BuildRowsOptions,
 ): BeerRowVM[] {
-  const { search, filter, sort, direction = 'asc', showNotPresent = false } = options;
+  const {
+    search,
+    filter,
+    sort,
+    direction = 'asc',
+    styleCategory = null,
+    showNotPresent = false,
+  } = options;
   const q = search.trim().toLowerCase();
   const filtered = beers.filter((b) => {
     const state = stateFor(userData, b.id);
     if (!showNotPresent && state.notPresent) return false;
     if (!matchesSearch(b, q)) return false;
     if (!matchesFilter(state, filter)) return false;
+    if (!matchesStyleCategory(b, styleCategory)) return false;
     return true;
   });
   const sorted = [...filtered].sort(comparator(sort, direction));
   return sorted.map((beer) => buildVm(beer, stateFor(userData, beer.id), q));
+}
+
+/** The category a beer is filtered under. Null/uncategorized beers are "Other". */
+export function effectiveCategory(beer: Beer): StyleCategory {
+  return beer.styleCategory ?? 'Other';
+}
+
+/**
+ * Faceted style counts for the filter chips. Applies not-present hiding,
+ * search, and the status filter — but NOT the style filter itself — so each
+ * chip's count reflects what selecting it would yield, and counts don't churn
+ * as the user switches between styles. Returned in canonical STYLE_CATEGORIES
+ * order; categories with no matching beers are still included (count 0) so the
+ * caller can decide whether to render them.
+ */
+export function styleCategoryFacets(
+  beers: Beer[],
+  userData: UserData,
+  options: Pick<BuildRowsOptions, 'search' | 'filter' | 'showNotPresent'>,
+): Array<{ category: StyleCategory; count: number }> {
+  const { search, filter, showNotPresent = false } = options;
+  const q = search.trim().toLowerCase();
+  const counts = new Map<StyleCategory, number>(STYLE_CATEGORIES.map((c) => [c, 0]));
+  for (const b of beers) {
+    const state = stateFor(userData, b.id);
+    if (!showNotPresent && state.notPresent) continue;
+    if (!matchesSearch(b, q)) continue;
+    if (!matchesFilter(state, filter)) continue;
+    const cat = effectiveCategory(b);
+    counts.set(cat, (counts.get(cat) ?? 0) + 1);
+  }
+  return STYLE_CATEGORIES.map((category) => ({ category, count: counts.get(category) ?? 0 }));
 }
 
 function stateFor(userData: UserData, beerId: string): BeerUserState {
@@ -136,6 +188,15 @@ function matchesFilter(state: BeerUserState, mode: FilterMode): boolean {
     case 'notTried':
       return state.status !== 'tried';
   }
+}
+
+/**
+ * Style-category predicate. A null `active` means "all styles". Beers with no
+ * baked category (null) are matched as "Other", so they remain reachable.
+ */
+function matchesStyleCategory(beer: Beer, active: StyleCategory | null): boolean {
+  if (!active) return true;
+  return effectiveCategory(beer) === active;
 }
 
 // --- Sort --------------------------------------------------------------------
