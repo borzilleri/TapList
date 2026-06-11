@@ -114,6 +114,8 @@ const OVERRIDES: Record<string, StyleCategory> = {
   'wbf26-0129': 'Cider', // "(semi-sweet)" — Offset Ciderworks
   'wbf26-0217': 'Cider', // "Dry Apple"   — Offset Ciderworks
   'wbf26-0199': 'Saison & Farmhouse', // "Wine Grape Mixed Ferm" but a wild ale re-fermented on grapes
+  'wbf26-0009': 'Lager & Pilsner', // "Heidelberg" — no style; desc is a crisp NW pilsner-malt lager
+  'wbf26-0076': 'Blonde, Kölsch & Cream', // "Gusto Crema Coffee Ale" — no style; desc says "cream ale"
 };
 
 /** First rule whose any-keyword is a substring of `text`, or null if none match. */

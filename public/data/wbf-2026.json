@@ -80,7 +80,7 @@
       "brewery": "7 Seas Brewing Co",
       "abv": 4,
       "description": "Brewed on a base of NW pilsner malt along with flaked corn and rice. Hopped with Yakima Magnum and German Hallertau, yielding a perfectly crisp, refreshing and easy-going beer.",
-      "styleCategory": "Other"
+      "styleCategory": "Lager & Pilsner"
     },
     {
       "id": "wbf26-0010",
@@ -673,7 +673,7 @@
       "brewery": "Georgetown Brewing Company",
       "abv": 4.6,
       "description": "Building on Gusto Crema blend, a medium roasted bean from our friends at Caffè Umbria, we made a smooth, rich cream ale. This beer has roasted flavor, aroma, and color from cold brew coffee. Smooth, rich mouthfeel comes from oats and Munich malt. Gold medal winner in the Coffee Beer category at the Great American Beer Festival in 2016! Contains lactose.",
-      "styleCategory": "Other"
+      "styleCategory": "Blonde, Kölsch & Cream"
     },
     {
       "id": "wbf26-0077",
