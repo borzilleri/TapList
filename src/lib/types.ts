@@ -31,8 +31,8 @@ export interface Catalog {
  * beer carries a `styleCategory` from this fixed set instead. The array order
  * is the canonical display order for the style filter chips.
  *
- * `'Other'` is the catch-all for non-beer entries (seltzer, kombucha, hop
- * water, soda, wine) and anything the categorizer can't place.
+ * `'Other'` is the catch-all for non-alcoholic/adjacent entries (seltzer,
+ * kombucha, hop water, soda) and anything the categorizer can't place.
  */
 export const STYLE_CATEGORIES = [
   'IPA',
@@ -46,6 +46,7 @@ export const STYLE_CATEGORIES = [
   'Amber, Brown & Dark',
   'Blonde, Kölsch & Cream',
   'Cider',
+  'Wine & Mead',
   'Other',
 ] as const;
 

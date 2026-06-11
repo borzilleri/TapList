@@ -267,7 +267,7 @@
       "brewery": "Black Raven Brewing",
       "location": "South Tent, Booth 24",
       "description": "A small-batch wee heavy brewed with heather tips. Layered caramel and a soft floral note.",
-      "styleCategory": "Other"
+      "styleCategory": "Amber, Brown & Dark"
     },
     {
       "id": "mock-0028",
@@ -293,7 +293,7 @@
       "name": "Last-Minute Lager",
       "brewery": "Mystery Brewing Co.",
       "description": "Brewery and recipe announced day-of. Watch the board near the entrance for details.",
-      "styleCategory": "Other"
+      "styleCategory": "Lager & Pilsner"
     },
     {
       "id": "mock-0031",
@@ -331,7 +331,7 @@
       "brewery": "Lowlands Brewing",
       "abv": "~5.2",
       "location": "Specialty Tent, Booth 14",
-      "styleCategory": "Other"
+      "styleCategory": "Pale Ale"
     },
     {
       "id": "mock-0035",
@@ -339,7 +339,7 @@
       "brewery": "Skagit Smokehouse",
       "abv": null,
       "location": "Specialty Tent, Booth 9",
-      "styleCategory": "Other"
+      "styleCategory": "Stout & Porter"
     },
     {
       "id": "mock-0036",

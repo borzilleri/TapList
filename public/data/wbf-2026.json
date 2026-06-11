@@ -231,7 +231,7 @@
       "brewery": "Bizarre Brewing",
       "abv": 5,
       "description": "We brewed our brett bier with pilsner malt, flaked and malted wheat, and flaked oats. This light and effervescent bier was hopped lightly in the kettle with Saaz and Cashmere hops and infused with lemon peel and coriander. Keg conditioned with one of our favorite Brettanomyces strains.",
-      "styleCategory": "Other"
+      "styleCategory": "Sour & Gose"
     },
     {
       "id": "wbf26-0027",
@@ -354,7 +354,7 @@
       "brewery": "Culture Shock Brew",
       "abv": 6.9,
       "style": "Hard Tepache",
-      "styleCategory": "Cider",
+      "styleCategory": "Other",
       "description": "Tepache Daydream, pineapple hard tepache 6.9% ABV\nNotes of roasted pineapple and baking spice with an outstanding wild yeast funk"
     },
     {
@@ -665,7 +665,7 @@
       "brewery": "Georgetown Brewing Company",
       "abv": 5.4,
       "description": "Modeled after the Bodhizafa recipe, but brewed to be lighter, Juniorzafa still has the bright tropical aromas from the Citra, Mosaic and Chinook hops you love, but with a lower ABV.",
-      "styleCategory": "Other"
+      "styleCategory": "IPA"
     },
     {
       "id": "wbf26-0076",
@@ -733,7 +733,7 @@
       "brewery": "Halcyon Brewing",
       "abv": 5.1,
       "description": "Our pilsner is single-decocted using local Linc/Coldstream pilsner malt and Oregon-grown Liberty and Sterling. It has a bit of old world spin. Notes of lemon, berries and a dash of herbal spice with a nice bready base.",
-      "styleCategory": "Other"
+      "styleCategory": "Lager & Pilsner"
     },
     {
       "id": "wbf26-0084",
@@ -876,7 +876,7 @@
       "brewery": "Kulshan Brewing Co.",
       "abv": 11,
       "description": "Aged in barrels from Big Gin Distillery in Seattle, this beer has a smooth bready malt body, with big botanical notes of juniper, pine, and lemongrass, and a slightly warm, boozy finish.",
-      "styleCategory": "Other"
+      "styleCategory": "Belgian & Strong"
     },
     {
       "id": "wbf26-0100",
@@ -1080,7 +1080,7 @@
       "brewery": "Modern Nature Wines",
       "abv": 13,
       "style": "Carmenere",
-      "styleCategory": "Other",
+      "styleCategory": "Wine & Mead",
       "description": "2023 Carménère\nHandpicked / naturally fermented / unfiltered / unfined\nBarrel aged for 18 months in neutral oak.\nNo more than 20ppm sulfite added before bottling.\nGrapes from Columbia Valley AVA, Des Estes Long Vineyard\nTasting notes – Mineral driven with herbaceous nose, tastes fruit forward with earth, smoke, and black pepper."
     },
     {
@@ -1089,7 +1089,7 @@
       "brewery": "Modern Nature Wines",
       "abv": 14.3,
       "style": "Sangiovese",
-      "styleCategory": "Other",
+      "styleCategory": "Wine & Mead",
       "description": "2023 Sangiovese\nNaturally fermented/hand picked/unfiltered/unfined\nBarrel aged for 18 months in neutral oak.\nNo more than 20ppm sulfite added before bottling.\nGrapes from Red Willow Vineyard, Yakima Valley AVA\nTasting notes - Velvety and rich, cherry and leather"
     },
     {
@@ -1098,7 +1098,7 @@
       "brewery": "Modern Nature Wines",
       "abv": 12.4,
       "style": "Dry Riesling",
-      "styleCategory": "Other",
+      "styleCategory": "Wine & Mead",
       "description": "2025 Riesling\nHandpicked / old vine / naturally fermented in locally sourced NOVUM amphora for 10 months and finished in stainless steel\nGrapes from Columbia Valley AVA, Dubrul Vineyard\nTasting notes - Green apple, lemongrass, nectarine and pineapple with a long finish"
     },
     {
@@ -1107,7 +1107,7 @@
       "brewery": "Modern Nature Wines",
       "abv": 12.9,
       "style": "Gewürztraminer Orange Wine",
-      "styleCategory": "Other",
+      "styleCategory": "Wine & Mead",
       "description": "2025 Gewürztraminer orange wine\nNaturally fermented/hand picked/unfiltered\nBarrel fermented on skins for 6 weeks in locally sourced NOVUM amphora then aged in stainless on the lees for 6 months\nGrapes from Naches Heights AVA\nTasting notes - Ripe apricot and peach with a hint of ginger"
     },
     {
@@ -1529,7 +1529,7 @@
       "brewery": "Steam Donkey Brewing Co.",
       "abv": 4.4,
       "description": "Cream Ale steeped with Earl Gray tea leaves.",
-      "styleCategory": "Other"
+      "styleCategory": "Blonde, Kölsch & Cream"
     },
     {
       "id": "wbf26-0174",
@@ -1537,7 +1537,7 @@
       "brewery": "Steam Donkey Brewing Co.",
       "abv": 6.8,
       "description": "West Coast IPA dry hopped with Abstrax Brewgas - Sour Tangie",
-      "styleCategory": "Other"
+      "styleCategory": "IPA"
     },
     {
       "id": "wbf26-0175",
@@ -1757,7 +1757,7 @@
       "brewery": "Varietal Beer Co",
       "abv": 8.1,
       "style": "Wine Grape Mixed Ferm",
-      "styleCategory": "Other",
+      "styleCategory": "Saison & Farmhouse",
       "description": "8.1% ABV - Wild Ale re-fermented on whole Syrah grapes\n\nWe continue our wild collaboration with our friend Oliver May from Discover Vineyard (Horse Heaven Hills AVA), celebrating Chris & Oliver’s mentor, conservationist Dr. Steven Herman. This beer was blended from selected wine barrel aged wild ale aged in red wine barrels, then re-fermented for about a year on lightly crushed Syrah grapes with a small portion of Petite Verdot grapes added, before allowing the beer to condition naturally. This beer features a mild acidity with bright red berry flavor and a touch of black pepper. The deep red color of this beer comes from the long contact time with the Syrah grape skins."
     },
     {

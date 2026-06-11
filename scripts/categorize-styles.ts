@@ -6,9 +6,9 @@
  *   npx tsx scripts/categorize-styles.ts public/data/wbf-2026.json [more.json ...]
  *
  * The rules are an ordered keyword match (first match wins) against the
- * lowercased raw `style`. A handful of rows the rules can't get right are
- * pinned in OVERRIDES by beer id, so re-runs stay idempotent. Missing/empty
- * style and anything unmatched fall through to 'Other'.
+ * lowercased raw `style`, falling back to the `name` when `style` carries no
+ * signal. A handful of rows neither can resolve are pinned in OVERRIDES by
+ * beer id, so re-runs stay idempotent. Anything unmatched falls to 'Other'.
  *
  * The script rewrites each beer object with `styleCategory` inserted right
  * after `style` (or appended when there is no `style`), preserving all other
@@ -23,14 +23,10 @@ import { STYLE_CATEGORIES, type StyleCategory } from '../src/lib/types';
 
 /** Ordered keyword rules. First rule whose any-keyword is a substring wins. */
 const RULES: Array<{ category: StyleCategory; keywords: string[] }> = [
-  { category: 'Cider', keywords: ['cider', 'tepache', 'perry'] },
+  { category: 'Cider', keywords: ['cider', 'perry'] },
   {
-    category: 'Other',
+    category: 'Wine & Mead',
     keywords: [
-      'seltzer',
-      'hop water',
-      'kombucha',
-      'soda',
       'mead',
       'wine grape',
       'orange wine',
@@ -39,8 +35,16 @@ const RULES: Array<{ category: StyleCategory; keywords: string[] }> = [
       'riesling',
       'gewürz',
       'gewurz',
-      'shandy',
+      'merlot',
+      'cabernet',
+      'chardonnay',
+      'pinot',
+      'syrah',
     ],
+  },
+  {
+    category: 'Other',
+    keywords: ['seltzer', 'hop water', 'kombucha', 'soda', 'tepache', 'shandy'],
   },
   {
     category: 'Sour & Gose',
@@ -104,21 +108,34 @@ const RULES: Array<{ category: StyleCategory; keywords: string[] }> = [
   },
 ];
 
-/** Per-id pins for rows the rules can't infer (Offset ciders with bare labels). */
+/** Per-id pins for rows neither the style nor the name can resolve correctly. */
 const OVERRIDES: Record<string, StyleCategory> = {
   'wbf26-0128': 'Cider', // "(off-dry)"   — Offset Ciderworks
   'wbf26-0129': 'Cider', // "(semi-sweet)" — Offset Ciderworks
   'wbf26-0217': 'Cider', // "Dry Apple"   — Offset Ciderworks
+  'wbf26-0199': 'Saison & Farmhouse', // "Wine Grape Mixed Ferm" but a wild ale re-fermented on grapes
 };
 
-function categorize(id: string, rawStyle: unknown): StyleCategory {
-  if (OVERRIDES[id]) return OVERRIDES[id];
-  if (typeof rawStyle !== 'string' || rawStyle.trim().length === 0) return 'Other';
-  const s = rawStyle.toLowerCase();
+/** First rule whose any-keyword is a substring of `text`, or null if none match. */
+function matchRules(text: unknown): StyleCategory | null {
+  if (typeof text !== 'string' || text.trim().length === 0) return null;
+  const s = text.toLowerCase();
   for (const rule of RULES) {
     if (rule.keywords.some((kw) => s.includes(kw))) return rule.category;
   }
-  return 'Other';
+  return null;
+}
+
+/**
+ * Categorize from the `style` field; when it carries no signal at all (missing,
+ * empty, or an unrecognized label like "Fruit Ale"), fall back to the beer's
+ * `name`, which is concise and intentional — e.g. "Juniorzafa IPA" or "360
+ * Blonde Ale". Descriptions are deliberately NOT consulted: they're prose and
+ * keywords like "barrel" or "lager finish" produce false hits.
+ */
+function categorize(id: string, rawStyle: unknown, name: unknown): StyleCategory {
+  if (OVERRIDES[id]) return OVERRIDES[id];
+  return matchRules(rawStyle) ?? matchRules(name) ?? 'Other';
 }
 
 /** Rebuild a beer object inserting styleCategory after `style` (or at the end). */
@@ -148,7 +165,7 @@ function processFile(path: string): void {
   }
   const tally = new Map<StyleCategory, number>(STYLE_CATEGORIES.map((c) => [c, 0]));
   data.beers = data.beers.map((beer) => {
-    const category = categorize(String(beer.id), beer.style);
+    const category = categorize(String(beer.id), beer.style, beer.name);
     tally.set(category, (tally.get(category) ?? 0) + 1);
     return withCategory(beer, category);
   });
