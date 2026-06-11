@@ -56,12 +56,14 @@ describe('loadUserData', () => {
           status: 'toTry' as const,
           opinion: null,
           notes: 'looks good',
+          location: '',
           notPresent: false,
         },
         'wbf26-0002': {
           status: 'tried' as const,
           opinion: 'liked' as const,
           notes: '',
+          location: 'Booth 12',
           notPresent: false,
         },
       },
@@ -77,7 +79,9 @@ describe('loadUserData', () => {
       'wbf-2026',
       {
         version: 1,
-        beers: { x: { status: 'toTry', opinion: null, notes: '', notPresent: false } },
+        beers: {
+          x: { status: 'toTry', opinion: null, notes: '', location: '', notPresent: false },
+        },
       },
       storage,
     );
@@ -85,7 +89,9 @@ describe('loadUserData', () => {
       'other-fest',
       {
         version: 1,
-        beers: { y: { status: 'tried', opinion: null, notes: '', notPresent: false } },
+        beers: {
+          y: { status: 'tried', opinion: null, notes: '', location: '', notPresent: false },
+        },
       },
       storage,
     );
@@ -118,6 +124,7 @@ describe('parseUserData', () => {
       status: null,
       opinion: null,
       notes: 'x',
+      location: '',
       notPresent: false,
     });
   });
@@ -131,6 +138,43 @@ describe('parseUserData', () => {
       },
     });
     expect(Object.keys(parsed.beers)).toEqual(['real']);
+  });
+
+  it('preserves a beer whose only user state is a custom location', () => {
+    const parsed = parseUserData({
+      version: 1,
+      beers: {
+        a: { status: null, opinion: null, notes: '', location: 'Booth 42', notPresent: false },
+      },
+    });
+    expect(parsed.beers.a).toEqual({
+      status: null,
+      opinion: null,
+      notes: '',
+      location: 'Booth 42',
+      notPresent: false,
+    });
+  });
+
+  it('truncates over-long custom locations on read', () => {
+    const tooLong = 'a'.repeat(200);
+    const parsed = parseUserData({
+      version: 1,
+      beers: {
+        a: { status: null, opinion: null, notes: '', location: tooLong, notPresent: false },
+      },
+    });
+    expect(parsed.beers.a.location.length).toBe(80);
+  });
+
+  it('clears the custom location under the not-present invariant on read', () => {
+    const parsed = parseUserData({
+      version: 1,
+      beers: {
+        a: { status: null, opinion: null, notes: '', location: 'Booth 42', notPresent: true },
+      },
+    });
+    expect(parsed.beers.a.location).toBe('');
   });
 
   it('truncates over-long notes on read (defensive against hand-edits)', () => {
@@ -155,6 +199,7 @@ describe('parseUserData', () => {
       status: null,
       opinion: null,
       notes: '',
+      location: '',
       notPresent: true,
     });
   });
@@ -247,7 +292,7 @@ describe('beerState', () => {
     const data = {
       version: 1 as const,
       beers: {
-        a: { status: 'tried' as const, opinion: null, notes: '', notPresent: false },
+        a: { status: 'tried' as const, opinion: null, notes: '', location: '', notPresent: false },
       },
     };
     expect(beerState(data, 'a').status).toBe('tried');
@@ -263,6 +308,7 @@ describe('isBeerTouched', () => {
     expect(isBeerTouched({ ...EMPTY_BEER_USER_STATE, status: 'toTry' })).toBe(true);
     expect(isBeerTouched({ ...EMPTY_BEER_USER_STATE, opinion: 'liked' })).toBe(true);
     expect(isBeerTouched({ ...EMPTY_BEER_USER_STATE, notes: 'hi' })).toBe(true);
+    expect(isBeerTouched({ ...EMPTY_BEER_USER_STATE, location: 'Booth 1' })).toBe(true);
     expect(isBeerTouched({ ...EMPTY_BEER_USER_STATE, notPresent: true })).toBe(true);
     expect(
       isBeerTouched({

@@ -151,12 +151,14 @@ taplist:userdata:<datasetId>
       "status": "toTry",
       "opinion": null,
       "notes": "",
+      "location": "North Tent, Booth 12",
       "notPresent": false
     },
     "adhoc-9f1c...": {
       "status": "tried",
       "opinion": "liked",
       "notes": "Bright, citrusy. Would buy.",
+      "location": "",
       "notPresent": false,
       "adhoc": {
         "name": "Mystery Sour",
@@ -177,10 +179,13 @@ taplist:userdata:<datasetId>
 | `status`     | `"toTry" \| "tried" \| null`    | The user's progress on this beer. `"toTry"` = queued to try, `"tried"` = sampled, `null` = neither. Mutually exclusive by construction. Setting `opinion` to a non-null value implicitly sets `status = "tried"` (overwriting `"toTry"` if it was there). |
 | `opinion`    | `"liked" \| "disliked" \| null` | Optional. Null means no opinion. Setting a non-null value implicitly sets `status = "tried"`. Clearing the opinion does _not_ revert status.                                                                                                              |
 | `notes`      | string                          | Plain text, ≤280 chars (hard enforced in UI; importer silently truncates longer values).                                                                                                                                                                  |
+| `location`   | string                          | User-supplied custom location, ≤80 chars. When non-empty, it **overrides** the dataset beer's `location` in the list view. Empty string means no override. Available even when the dataset omits locations entirely.                                      |
 | `notPresent` | boolean                         | Hides the beer from default views.                                                                                                                                                                                                                        |
 | `adhoc`      | object (see below)              | Present only on ad-hoc beers.                                                                                                                                                                                                                             |
 
-A beer is "touched" — and therefore included in CSV export — if **any** of the following are true: `status !== null`, `opinion !== null`, `notes !== ""`, `notPresent`, or it is ad-hoc.
+A beer is "touched" — and therefore included in CSV export — if **any** of the following are true: `status !== null`, `opinion !== null`, `notes !== ""`, `location !== ""`, `notPresent`, or it is ad-hoc.
+
+The not-present invariant clears the custom location alongside status/opinion/notes: `notPresent === true ⇒ status === null && opinion === null && notes === "" && location === ""`.
 
 ### Ad-hoc beer payload
 
@@ -213,21 +218,22 @@ Example: `taplist-export-wbf-2026-20260612-153045.csv`.
 
 The header row is required on import. Column order in export is fixed (below) but the importer matches by header name, not position, so re-ordered columns from spreadsheet edits still import correctly.
 
-| Column        | Type    | Notes                                                                                                       |
-| ------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
-| `id`          | string  | Beer id. For ad-hoc beers, the locally generated `adhoc-...` id.                                            |
-| `name`        | string  | Beer name. Always populated.                                                                                |
-| `brewery`     | string  | Brewery name.                                                                                               |
-| `abv`         | number  | ABV as a number; blank if unknown.                                                                          |
-| `style`       | string  | Style label.                                                                                                |
-| `location`    | string  | Optional. Blank if not in dataset and not set on an ad-hoc beer.                                            |
-| `description` | string  | Optional. Long-form text; quoted per RFC 4180 (may contain commas, newlines, quotes). Blank if not present. |
-| `to_try`      | boolean | `true` if the user has queued this beer to try. Mutually exclusive with `tried` (see import semantics).     |
-| `tried`       | boolean | `true` if the user has sampled this beer. Mutually exclusive with `to_try`.                                 |
-| `opinion`     | enum    | `liked`, `disliked`, or blank.                                                                              |
-| `notes`       | string  | Plain text; may contain commas/newlines (quoted per RFC 4180).                                              |
-| `not_present` | boolean | `true` / `false`.                                                                                           |
-| `is_adhoc`    | boolean | `true` for ad-hoc beers, `false` otherwise.                                                                 |
+| Column          | Type    | Notes                                                                                                                                                                                                              |
+| --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`            | string  | Beer id. For ad-hoc beers, the locally generated `adhoc-...` id.                                                                                                                                                   |
+| `name`          | string  | Beer name. Always populated.                                                                                                                                                                                       |
+| `brewery`       | string  | Brewery name.                                                                                                                                                                                                      |
+| `abv`           | number  | ABV as a number; blank if unknown.                                                                                                                                                                                 |
+| `style`         | string  | Style label.                                                                                                                                                                                                       |
+| `location`      | string  | Optional. Blank if not in dataset and not set on an ad-hoc beer.                                                                                                                                                   |
+| `description`   | string  | Optional. Long-form text; quoted per RFC 4180 (may contain commas, newlines, quotes). Blank if not present.                                                                                                        |
+| `to_try`        | boolean | `true` if the user has queued this beer to try. Mutually exclusive with `tried` (see import semantics).                                                                                                            |
+| `tried`         | boolean | `true` if the user has sampled this beer. Mutually exclusive with `to_try`.                                                                                                                                        |
+| `opinion`       | enum    | `liked`, `disliked`, or blank.                                                                                                                                                                                     |
+| `notes`         | string  | Plain text; may contain commas/newlines (quoted per RFC 4180).                                                                                                                                                     |
+| `user_location` | string  | User-supplied custom location override (≤80 chars). Distinct from the dataset/source `location` column. Blank when the user hasn't set one. Older exports predating this column import cleanly (treated as blank). |
+| `not_present`   | boolean | `true` / `false`.                                                                                                                                                                                                  |
+| `is_adhoc`      | boolean | `true` for ad-hoc beers, `false` otherwise.                                                                                                                                                                        |
 
 ### Export scope
 
@@ -238,8 +244,9 @@ Only "touched" beers (per the definition in section 3) are exported.
 - **Replace, not merge.** All existing user data on the device is discarded before import, after a confirmation dialog.
 - Each row is validated:
   - `is_adhoc=true` rows are recreated as ad-hoc beers, preserving the `id` so subsequent round-trips remain stable. All fields from the row (name, brewery, abv, style, location, description, plus user data) are restored, since there's no dataset record to fall back on.
-  - `is_adhoc=false` rows must have an `id` matching a beer in the current dataset; non-matching rows are dropped with a count surfaced to the user. **Only the user-data columns (`to_try`, `tried`, `opinion`, `notes`, `not_present`) are applied from the row.** The beer-metadata columns (`name`, `brewery`, `abv`, `style`, `location`, `description`) in the CSV are ignored — the current dataset is the authoritative source for those, so a corrected brewery name or updated description in the dataset is never rolled back by re-importing an older CSV. These columns exist in the export only so the file is human-readable in a spreadsheet.
+  - `is_adhoc=false` rows must have an `id` matching a beer in the current dataset; non-matching rows are dropped with a count surfaced to the user. **Only the user-data columns (`to_try`, `tried`, `opinion`, `notes`, `user_location`, `not_present`) are applied from the row.** The beer-metadata columns (`name`, `brewery`, `abv`, `style`, `location`, `description`) in the CSV are ignored — the current dataset is the authoritative source for those, so a corrected brewery name or updated description in the dataset is never rolled back by re-importing an older CSV. These columns exist in the export only so the file is human-readable in a spreadsheet. Note `user_location` is user data and **is** applied, whereas the dataset/source `location` column is metadata and is not.
 - `to_try` and `tried` are collapsed into the in-memory tri-state `status` field on import. The rule: if `tried` is true, `status = "tried"` (regardless of `to_try`); else if `to_try` is true, `status = "toTry"`; else `status = null`. The "`tried` wins" precedence handles hand-edited rows where the user checked both boxes by mistake.
 - Boolean parsing is lenient (users are expected to hand-edit these files in a spreadsheet). All comparisons are case-insensitive and surrounding whitespace is stripped. The following are treated as **true**: `true`, `t`, `yes`, `y`, `1`, `x`, `✓`. Everything else — including blank cells, `false`, `f`, `no`, `n`, `0`, `-`, and any unrecognized value — is treated as **false**. The intent: a spreadsheet user can mark a column with an `x` or a `1` (or leave it blank for false) and have it Just Work.
 - `opinion` parsing is also lenient: leading/trailing whitespace stripped, case-insensitive. `liked` and `disliked` map to their respective values; `+`, `like`, `yes`, and `thumbs up` also map to `liked`; `-`, `dislike`, `no`, and `thumbs down` also map to `disliked`. Everything else (including blank) is treated as no opinion.
 - `notes` longer than 280 characters are silently truncated to 280. The user's original CSV file is unchanged, so no data is lost from their perspective. No warning is surfaced — keep the import path quiet and forgiving.
+- `user_location` longer than 80 characters is silently truncated to 80, on the same quiet-and-forgiving basis as `notes`.

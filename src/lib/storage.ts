@@ -10,6 +10,7 @@
 
 import {
   EMPTY_BEER_USER_STATE,
+  LOCATION_MAX_LENGTH,
   NOTES_MAX_LENGTH,
   type AdhocBeerPayload,
   type BeerStatus,
@@ -93,25 +94,34 @@ function parseBeerState(raw: unknown): BeerUserState | null {
   let status = parseStatus(s.status);
   let opinion = parseOpinion(s.opinion);
   let notes = parseNotes(s.notes);
+  let location = parseLocation(s.location);
   const notPresent = s.notPresent === true;
   const adhoc = parseAdhoc(s.adhoc);
 
-  // Enforce the invariant: a not-present beer can't carry status/opinion/notes.
+  // Enforce the invariant: a not-present beer can't carry status/opinion/notes/location.
   // If storage has both (e.g. hand-edited), not-present wins.
   if (notPresent) {
     status = null;
     opinion = null;
     notes = '';
+    location = '';
   }
 
   // If the entry has no actual data on it, treat it as absent so we don't
   // bloat storage with empty records. Ad-hoc beers always carry data, so
   // they're never empty by definition.
-  if (adhoc === undefined && status === null && opinion === null && notes === '' && !notPresent) {
+  if (
+    adhoc === undefined &&
+    status === null &&
+    opinion === null &&
+    notes === '' &&
+    location === '' &&
+    !notPresent
+  ) {
     return null;
   }
 
-  const result: BeerUserState = { status, opinion, notes, notPresent };
+  const result: BeerUserState = { status, opinion, notes, location, notPresent };
   if (adhoc) result.adhoc = adhoc;
   return result;
 }
@@ -130,6 +140,13 @@ function parseNotes(value: unknown): string {
   if (typeof value !== 'string') return '';
   // Hard cap on read — defensive against hand-edited storage.
   if (value.length > NOTES_MAX_LENGTH) return value.slice(0, NOTES_MAX_LENGTH);
+  return value;
+}
+
+function parseLocation(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  // Hard cap on read — defensive against hand-edited storage.
+  if (value.length > LOCATION_MAX_LENGTH) return value.slice(0, LOCATION_MAX_LENGTH);
   return value;
 }
 
@@ -165,6 +182,7 @@ export function isBeerTouched(state: BeerUserState): boolean {
     state.status !== null ||
     state.opinion !== null ||
     state.notes !== '' ||
+    state.location !== '' ||
     state.notPresent ||
     state.adhoc !== undefined
   );

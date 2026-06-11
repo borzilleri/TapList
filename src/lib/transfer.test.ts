@@ -33,6 +33,7 @@ function userData(states: Record<string, Partial<BeerUserState>> = {}): UserData
       status: null,
       opinion: null,
       notes: '',
+      location: '',
       notPresent: false,
       ...partial,
     };
@@ -57,6 +58,7 @@ describe('buildExportCsv', () => {
       'tried',
       'opinion',
       'notes',
+      'user_location',
       'not_present',
       'is_adhoc',
     ]);
@@ -95,6 +97,16 @@ describe('buildExportCsv', () => {
       not_present: 'false',
       is_adhoc: 'false',
     });
+  });
+
+  it('exports the custom location in the user_location column', () => {
+    const datasetBeers = [beer({ id: 'b1', location: 'Booth 1' })];
+    const data = userData({ b1: { location: 'North Tent, Booth 42' } });
+    const [row] = buildExportCsv({ datasetBeers, userData: data }).rows;
+    // The source `location` column keeps the dataset value; the override
+    // travels in its own column.
+    expect(row.location).toBe('Booth 1');
+    expect(row.user_location).toBe('North Tent, Booth 42');
   });
 
   it('uses the ad-hoc payload as source-beer fields for ad-hoc rows', () => {
@@ -371,6 +383,26 @@ describe('parseImport', () => {
     expect(state.notes).toBe('');
   });
 
+  it('restores a custom location from the user_location column', () => {
+    const result = importCsv(
+      'id,is_adhoc,tried,user_location\r\n' + 'wbf26-0001,false,true,"North Tent, Booth 42"\r\n',
+    );
+    expect(result.userData.beers['wbf26-0001'].location).toBe('North Tent, Booth 42');
+  });
+
+  it('defaults the location to empty when the user_location column is absent', () => {
+    // Older exports predate the column — they must still import cleanly.
+    const result = importCsv('id,is_adhoc,tried\r\nwbf26-0001,false,true\r\n');
+    expect(result.userData.beers['wbf26-0001'].location).toBe('');
+  });
+
+  it('clears the custom location under the not-present cascade on import', () => {
+    const result = importCsv(
+      'id,is_adhoc,not_present,user_location\r\n' + 'wbf26-0001,false,true,"Booth 42"\r\n',
+    );
+    expect(result.userData.beers['wbf26-0001'].location).toBe('');
+  });
+
   it('ignores source-beer columns for non-ad-hoc rows (dataset wins)', () => {
     // The user might have hand-edited the brewery in the CSV; on import,
     // we ignore that and trust the current dataset for non-ad-hoc beers.
@@ -400,12 +432,14 @@ describe('parseImport', () => {
           status: 'tried',
           opinion: 'liked',
           notes: 'piney, citrusy\nwith a "wow" finish',
+          location: 'North Tent, Booth 7',
           notPresent: false,
         },
         'adhoc-1': {
           status: 'toTry',
           opinion: null,
           notes: '',
+          location: '',
           notPresent: false,
           adhoc: {
             name: 'Mystery Sour',
@@ -423,6 +457,7 @@ describe('parseImport', () => {
       status: 'tried',
       opinion: 'liked',
       notes: 'piney, citrusy\nwith a "wow" finish',
+      location: 'North Tent, Booth 7',
       notPresent: false,
     });
     expect(result.userData.beers['adhoc-1']).toMatchObject({

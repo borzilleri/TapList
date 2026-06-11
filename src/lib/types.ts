@@ -51,6 +51,9 @@ export interface Dataset {
 
 export const NOTES_MAX_LENGTH = 280;
 
+/** Cap on the user-supplied custom location override. */
+export const LOCATION_MAX_LENGTH = 80;
+
 /**
  * Tri-state user progress on a beer. `null` means neither queued nor tried.
  * Setting `opinion` to a non-null value implicitly sets `status = 'tried'`
@@ -79,6 +82,11 @@ export interface BeerUserState {
   status: BeerStatus;
   opinion: Opinion;
   notes: string;
+  /**
+   * User-supplied custom location. Overrides the dataset beer's `location`
+   * in the list view when non-empty. Empty string means "no override".
+   */
+  location: string;
   notPresent: boolean;
   adhoc?: AdhocBeerPayload;
 }
@@ -93,6 +101,7 @@ export const EMPTY_BEER_USER_STATE: Readonly<BeerUserState> = Object.freeze({
   status: null,
   opinion: null,
   notes: '',
+  location: '',
   notPresent: false,
 });
 
