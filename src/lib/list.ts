@@ -172,8 +172,11 @@ function comparator(sort: SortKey, direction: SortDirection): (a: Beer, b: Beer)
 // --- Snippet extraction ------------------------------------------------------
 
 function buildVm(beer: Beer, state: BeerUserState, q: string): BeerRowVM {
+  // A non-empty custom location overrides the dataset location in the list.
+  const customLocation = state.location.trim();
+  const effectiveBeer = customLocation ? { ...beer, location: customLocation } : beer;
   if (!matchedOnlyDescription(beer, q)) {
-    return { beer, state, descriptionSnippet: null, highlightRange: null };
+    return { beer: effectiveBeer, state, descriptionSnippet: null, highlightRange: null };
   }
   // Safe: matchedOnlyDescription returned true.
   const desc = beer.description!;
@@ -193,7 +196,7 @@ function buildVm(beer: Beer, state: BeerUserState, q: string): BeerRowVM {
   const hlStart = matchStart - start + leadingEllipsis;
   const hlEnd = hlStart + q.length;
   return {
-    beer,
+    beer: effectiveBeer,
     state,
     descriptionSnippet: snippet,
     highlightRange: { start: hlStart, end: hlEnd },

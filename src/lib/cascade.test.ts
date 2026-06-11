@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyAdhocEdit,
+  applyLocation,
   applyNotPresent,
   applyNotes,
   applyOpinion,
@@ -94,6 +95,7 @@ describe('applyStatus', () => {
         status: 'tried' as const,
         opinion: 'liked' as const,
         notes: 'tasty',
+        location: '',
         notPresent: true,
       };
       const result = applyStatus(initial, null);
@@ -152,23 +154,50 @@ describe('applyNotes', () => {
   });
 });
 
+describe('applyLocation', () => {
+  it('updates the custom location', () => {
+    const result = applyLocation(startingState(), 'North Tent, Booth 12');
+    expect(result.location).toBe('North Tent, Booth 12');
+  });
+
+  it('truncates over-long locations to the hard cap', () => {
+    const result = applyLocation(startingState(), 'a'.repeat(200));
+    expect(result.location.length).toBe(80);
+  });
+
+  it('is idempotent', () => {
+    const a = applyLocation(startingState(), 'Booth 7');
+    const b = applyLocation(a, 'Booth 7');
+    expect(b).toBe(a);
+  });
+
+  it('does not modify status, opinion, or notes', () => {
+    const initial = { ...startingState(), status: 'tried' as const, notes: 'tasty' };
+    const result = applyLocation(initial, 'Booth 7');
+    expect(result.status).toBe('tried');
+    expect(result.notes).toBe('tasty');
+  });
+});
+
 describe('applyNotPresent', () => {
   it('toggles to true', () => {
     expect(applyNotPresent(startingState(), true).notPresent).toBe(true);
   });
 
-  it('clears status, opinion, and notes when set to true', () => {
+  it('clears status, opinion, notes, and location when set to true', () => {
     const initial = {
       ...startingState(),
       status: 'tried' as const,
       opinion: 'liked' as const,
       notes: 'bright citrus',
+      location: 'Booth 7',
     };
     const result = applyNotPresent(initial, true);
     expect(result.notPresent).toBe(true);
     expect(result.status).toBeNull();
     expect(result.opinion).toBeNull();
     expect(result.notes).toBe('');
+    expect(result.location).toBe('');
   });
 
   it('preserves the ad-hoc payload when marking not-present', () => {

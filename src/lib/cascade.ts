@@ -8,6 +8,7 @@
 
 import {
   EMPTY_BEER_USER_STATE,
+  LOCATION_MAX_LENGTH,
   NOTES_MAX_LENGTH,
   type AdhocBeerPayload,
   type BeerStatus,
@@ -55,14 +56,23 @@ export function applyNotes(state: BeerUserState, notes: string): BeerUserState {
   return { ...state, notes: clipped };
 }
 
+/** Apply a custom-location update. Truncates to the hard cap (defensive; UI should prevent). */
+export function applyLocation(state: BeerUserState, location: string): BeerUserState {
+  const clipped =
+    location.length > LOCATION_MAX_LENGTH ? location.slice(0, LOCATION_MAX_LENGTH) : location;
+  if (state.location === clipped) return state;
+  return { ...state, location: clipped };
+}
+
 /**
  * Apply a not-present toggle.
  *
- * When marking a beer as not-present, status / opinion / notes are
- * cleared. A beer that isn't at the festival can't have a queue position,
- * a tasting opinion, or notes about how it tasted — those states only
- * make sense for present beers. This enforces the invariant
- * `notPresent === true ⇒ status === null && opinion === null && notes === ''`.
+ * When marking a beer as not-present, status / opinion / notes / location
+ * are cleared. A beer that isn't at the festival can't have a queue
+ * position, a tasting opinion, notes about how it tasted, or a location —
+ * those states only make sense for present beers. This enforces the
+ * invariant `notPresent === true ⇒ status === null && opinion === null &&
+ * notes === '' && location === ''`.
  *
  * Unmarking not-present does NOT restore prior state — once cleared, the
  * user data is gone. The beer comes back as untouched.
@@ -70,7 +80,7 @@ export function applyNotes(state: BeerUserState, notes: string): BeerUserState {
 export function applyNotPresent(state: BeerUserState, notPresent: boolean): BeerUserState {
   if (state.notPresent === notPresent) return state;
   if (notPresent) {
-    return { ...state, notPresent: true, status: null, opinion: null, notes: '' };
+    return { ...state, notPresent: true, status: null, opinion: null, notes: '', location: '' };
   }
   return { ...state, notPresent: false };
 }

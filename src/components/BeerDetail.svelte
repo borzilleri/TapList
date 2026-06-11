@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { NOTES_MAX_LENGTH, type Beer, type BeerStatus, type Opinion } from '../lib/types';
+  import {
+    LOCATION_MAX_LENGTH,
+    NOTES_MAX_LENGTH,
+    type Beer,
+    type BeerStatus,
+    type Opinion,
+  } from '../lib/types';
   import type { UserStore } from '../lib/userStore.svelte';
   import { focusTrap } from '../lib/focusTrap';
   import { lockBodyScroll } from '../lib/scrollLock';
@@ -52,6 +58,14 @@
       target.value = target.value.slice(0, NOTES_MAX_LENGTH);
     }
     store.setNotes(beer.id, target.value);
+  }
+
+  function onLocationInput(e: Event) {
+    const target = e.currentTarget as HTMLInputElement;
+    if (target.value.length > LOCATION_MAX_LENGTH) {
+      target.value = target.value.slice(0, LOCATION_MAX_LENGTH);
+    }
+    store.setLocation(beer.id, target.value);
   }
 
   function toggleNotPresent() {
@@ -182,6 +196,21 @@
             spellcheck="true"
           ></textarea>
         </label>
+
+        {#if !isAdhoc}
+          <label class="user-location">
+            <span class="user-location-label">Your location</span>
+            <input
+              type="text"
+              value={state.location}
+              oninput={onLocationInput}
+              maxlength={LOCATION_MAX_LENGTH}
+              placeholder={beer.location ?? 'e.g. North Tent, Booth 12'}
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </label>
+        {/if}
       {/if}
 
       <label class="not-present-toggle">
@@ -377,6 +406,30 @@
     min-height: 4.5rem;
   }
   .notes textarea:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -1px;
+  }
+
+  .user-location {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .user-location-label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .user-location input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    font: inherit;
+    line-height: 1.4;
+    min-height: 44px;
+  }
+  .user-location input:focus {
     outline: 2px solid var(--color-accent);
     outline-offset: -1px;
   }

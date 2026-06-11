@@ -22,6 +22,7 @@
 import { parseCsv, serializeCsv, type CsvData } from './csv';
 import { isAdhocId } from './userStore.svelte';
 import {
+  LOCATION_MAX_LENGTH,
   NOTES_MAX_LENGTH,
   type AdhocBeerPayload,
   type Beer,
@@ -43,6 +44,7 @@ export const EXPORT_HEADERS = [
   'tried',
   'opinion',
   'notes',
+  'user_location',
   'not_present',
   'is_adhoc',
 ] as const;
@@ -87,6 +89,7 @@ function isExportable(state: BeerUserState): boolean {
     state.status !== null ||
     state.opinion !== null ||
     state.notes !== '' ||
+    state.location !== '' ||
     state.notPresent ||
     state.adhoc !== undefined
   );
@@ -105,6 +108,7 @@ function rowForExport(beer: Beer, state: BeerUserState): Record<string, string> 
     tried: state.status === 'tried' ? 'true' : 'false',
     opinion: state.opinion ?? '',
     notes: state.notes,
+    user_location: state.location,
     not_present: state.notPresent ? 'true' : 'false',
     is_adhoc: state.adhoc ? 'true' : 'false',
   };
@@ -228,13 +232,15 @@ function stateFromRow(
 
   let notes = row.notes ?? '';
   if (notes.length > NOTES_MAX_LENGTH) notes = notes.slice(0, NOTES_MAX_LENGTH);
+  let location = row.user_location ?? '';
+  if (location.length > LOCATION_MAX_LENGTH) location = location.slice(0, LOCATION_MAX_LENGTH);
   const notPresent = parseBool(row.not_present);
 
   // The not-present cascade applies on import too — the runtime invariant
   // must hold even when reading from a CSV that violates it.
   const state: BeerUserState = notPresent
-    ? { status: null, opinion: null, notes: '', notPresent: true }
-    : { status, opinion, notes, notPresent: false };
+    ? { status: null, opinion: null, notes: '', location: '', notPresent: true }
+    : { status, opinion, notes, location, notPresent: false };
 
   if (adhoc) state.adhoc = adhoc;
   return state;

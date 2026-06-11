@@ -165,6 +165,15 @@ describe('UserStore mutations + persistence', () => {
     expect(readPersisted(storage)?.beers?.b1?.notes.length).toBe(280);
   });
 
+  it('persists a custom location and drops it when cleared', () => {
+    const { store, storage } = freshStore();
+    store.setLocation('b1', 'North Tent, Booth 42');
+    expect(store.get('b1').location).toBe('North Tent, Booth 42');
+    expect(readPersisted(storage)?.beers?.b1?.location).toBe('North Tent, Booth 42');
+    store.setLocation('b1', '');
+    expect(readPersisted(storage)?.beers?.b1).toBeUndefined();
+  });
+
   it('notPresent toggles to true on an empty beer', () => {
     const { store } = freshStore();
     store.setNotPresent('b1', true);
@@ -179,7 +188,13 @@ describe('UserStore mutations + persistence', () => {
     store.replaceData({
       version: 1,
       beers: {
-        replacement: { status: 'tried', opinion: 'liked', notes: 'new', notPresent: false },
+        replacement: {
+          status: 'tried',
+          opinion: 'liked',
+          notes: 'new',
+          location: '',
+          notPresent: false,
+        },
       },
     });
     // Prior entries are gone, replacement is present.
@@ -207,6 +222,7 @@ describe('UserStore mutations + persistence', () => {
       status: null,
       opinion: null,
       notes: '',
+      location: '',
       notPresent: true,
     });
   });

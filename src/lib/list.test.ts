@@ -31,6 +31,7 @@ function userData(states: Record<string, Partial<BeerUserState>> = {}): UserData
       status: null,
       opinion: null,
       notes: '',
+      location: '',
       notPresent: false,
       ...partial,
     };
@@ -290,6 +291,35 @@ describe('buildRows — vm carries per-row state', () => {
     expect(vm.state.opinion).toBeNull();
     expect(vm.state.notes).toBe('');
     expect(vm.state.notPresent).toBe(false);
+  });
+});
+
+describe('buildRows — custom location override', () => {
+  it('uses the custom location in place of the dataset location when set', () => {
+    const beers = [beer({ id: 'b1', location: 'Booth 1' })];
+    const data = userData({ b1: { location: 'North Tent, Booth 42' } });
+    const [vm] = buildRows(beers, data, opts());
+    expect(vm.beer.location).toBe('North Tent, Booth 42');
+  });
+
+  it('falls back to the dataset location when no custom location is set', () => {
+    const beers = [beer({ id: 'b1', location: 'Booth 1' })];
+    const [vm] = buildRows(beers, emptyUserData(), opts());
+    expect(vm.beer.location).toBe('Booth 1');
+  });
+
+  it('surfaces the custom location even when the dataset has none', () => {
+    const beers = [beer({ id: 'b1', location: null })];
+    const data = userData({ b1: { location: 'My spot' } });
+    const [vm] = buildRows(beers, data, opts());
+    expect(vm.beer.location).toBe('My spot');
+  });
+
+  it('treats a whitespace-only custom location as no override', () => {
+    const beers = [beer({ id: 'b1', location: 'Booth 1' })];
+    const data = userData({ b1: { location: '   ' } });
+    const [vm] = buildRows(beers, data, opts());
+    expect(vm.beer.location).toBe('Booth 1');
   });
 });
 

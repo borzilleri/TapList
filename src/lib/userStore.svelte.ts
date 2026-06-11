@@ -16,6 +16,7 @@
 
 import {
   applyAdhocEdit,
+  applyLocation,
   applyNotPresent,
   applyNotes,
   applyOpinion,
@@ -125,6 +126,10 @@ export class UserStore {
     this.mutate(beerId, (s) => applyNotes(s, notes));
   }
 
+  setLocation(beerId: string, location: string): void {
+    this.mutate(beerId, (s) => applyLocation(s, location));
+  }
+
   setNotPresent(beerId: string, notPresent: boolean): void {
     this.mutate(beerId, (s) => applyNotPresent(s, notPresent));
   }
@@ -225,6 +230,7 @@ function isUntouched(state: BeerUserState): boolean {
     state.status === null &&
     state.opinion === null &&
     state.notes === '' &&
+    state.location === '' &&
     state.notPresent === false &&
     state.adhoc === undefined
   );
