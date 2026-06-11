@@ -47,8 +47,14 @@ jobs:
       # when VITE_BASE_PATH is unset). The CNAME file in public/ is what
       # tells GitHub Pages to keep the custom domain wired across
       # workflow-based deploys.
+      # Production loads festival data from the standalone data site (GitHub
+      # Pages) so catalog/dataset updates publish without redeploying the app.
+      # Unset elsewhere (dev/tests), the app falls back to the bundled
+      # public/data/ dev fixture.
       - name: Build
         run: npm run build
+        env:
+          VITE_DATA_BASE_URL: https://borzilleri.net/taplist-data
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

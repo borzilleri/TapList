@@ -4,7 +4,7 @@ This document describes how the codebase is laid out and how the pieces fit toge
 
 ## Snapshot
 
-TapList is a single-page Svelte 5 (runes mode) app built with Vite. It runs entirely in the browser — there is no backend. The published dataset is a static JSON file served alongside the app; user data lives in `localStorage`. The app installs as a PWA so it keeps working with no network at the festival.
+TapList is a single-page Svelte 5 (runes mode) app built with Vite. It runs entirely in the browser — there is no backend. The published catalog and datasets are static JSON files fetched at runtime from a standalone data site ([`taplist-data`](https://github.com/borzilleri/taplist-data) on GitHub Pages, `https://borzilleri.net/taplist-data/`), so festival data can be updated without redeploying the app; user data lives in `localStorage`. The app installs as a PWA so it keeps working with no network at the festival.
 
 The build output is plain JS, CSS, an `index.html`, a manifest, a service worker, and a `CNAME` — all served from GitHub Pages at `https://taplist.rampant.io/`.
 
@@ -91,7 +91,7 @@ All components are file-local Svelte; no global components folder structure. Con
 2. `App` constructs `userStore` and `settingsStore` against `window.localStorage`. Settings hydrate immediately.
 3. `App` calls `pwa.register()` (fire-and-forget).
 4. `App` kicks off `loadAndActivate()`:
-   - `loadActiveDataset()` fetches `/data/catalog.json`, picks an active entry (or honours one if multiple), then fetches that entry's dataset URL.
+   - `loadActiveDataset()` fetches `data/catalog.json` from the data base URL (`VITE_DATA_BASE_URL` in production, the app origin in dev), picks an active entry (or honours one if multiple), then fetches that entry's dataset URL.
    - On success, `userStore.activate(dataset.id)` namespaces all subsequent reads/writes under `taplist:userdata:<datasetId>`.
 5. The template's `{#await loadPromise}` block swaps from the loading skeleton to the populated list (or to the error state with a Retry button).
 6. A `$effect` mirrors `settingsStore.theme` to the `<html data-theme>` attribute (removed entirely when the preference is `'system'` so the `prefers-color-scheme` media query takes over).
@@ -158,15 +158,15 @@ Schemas are versioned (`version: 1` in stored JSON). Loaders branch on the versi
 
 ## Build & deploy
 
-| File                              | Role                                                                                                                                                                                                                                                                             |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vite.config.ts`                  | Vite + Svelte plugin + `vite-plugin-pwa` config. `base` is parameterized via `VITE_BASE_PATH` (defaults to `/` for the custom domain; can be set to `/TapList/` for a project-path fallback). Workbox precaches the shell and runtime-caches `/data/*.json` with `NetworkFirst`. |
-| `eslint.config.js`                | Flat config: `@eslint/js` + `typescript-eslint` + `eslint-plugin-svelte` + Prettier compat. Unused `_`-prefixed args allowed.                                                                                                                                                    |
-| `tsconfig.json`                   | Extends `@tsconfig/svelte`; `strict`, `noUnusedLocals`, `noUnusedParameters`.                                                                                                                                                                                                    |
-| `.prettierrc` (in `package.json`) | 2-space, single-quote, 100-col, trailing commas everywhere.                                                                                                                                                                                                                      |
-| `.github/workflows/ci.yml`        | Lint → check → test → build → Playwright e2e. Caches `~/.cache/ms-playwright`.                                                                                                                                                                                                   |
-| `.github/workflows/deploy.yml`    | On push to `main`: build, upload as Pages artifact, deploy. `public/CNAME` carries the custom domain.                                                                                                                                                                            |
-| `public/`                         | Static files copied verbatim into `dist/`: PWA icons, favicon, `robots.txt`, `CNAME`, `data/catalog.json`, `data/taplist-mock-2026.json`.                                                                                                                                        |
+| File                              | Role                                                                                                                                                                                                                                                                                                      |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vite.config.ts`                  | Vite + Svelte plugin + `vite-plugin-pwa` config. `base` is parameterized via `VITE_BASE_PATH` (defaults to `/` for the custom domain; can be set to `/TapList/` for a project-path fallback). Workbox precaches the shell and runtime-caches `/data/*.json` with `NetworkFirst`.                          |
+| `eslint.config.js`                | Flat config: `@eslint/js` + `typescript-eslint` + `eslint-plugin-svelte` + Prettier compat. Unused `_`-prefixed args allowed.                                                                                                                                                                             |
+| `tsconfig.json`                   | Extends `@tsconfig/svelte`; `strict`, `noUnusedLocals`, `noUnusedParameters`.                                                                                                                                                                                                                             |
+| `.prettierrc` (in `package.json`) | 2-space, single-quote, 100-col, trailing commas everywhere.                                                                                                                                                                                                                                               |
+| `.github/workflows/ci.yml`        | Lint → check → test → build → Playwright e2e. Caches `~/.cache/ms-playwright`.                                                                                                                                                                                                                            |
+| `.github/workflows/deploy.yml`    | On published release (or manual dispatch): build, upload as Pages artifact, deploy. Sets `VITE_DATA_BASE_URL` so the build fetches data from the standalone data site. `public/CNAME` carries the custom domain.                                                                                          |
+| `public/`                         | Static files copied verbatim into `dist/`: PWA icons, favicon, `robots.txt`, `CNAME`, and `data/` — which now holds only a **local-dev fixture** (`catalog.json` + `taplist-mock-2026.json`). Real festival data lives in the separate [`taplist-data`](https://github.com/borzilleri/taplist-data) repo. |
 
 ## Dependencies
 
@@ -255,4 +255,3 @@ The shipped bundle has **zero runtime npm dependencies**. Svelte compiles to pla
 ## Known follow-ups
 
 - **Visual brand pass.** The current icon is functional but generic; a designed mark is on the roadmap.
-- **Real WBF dataset.** The published list isn't out yet; once it is, the mock dataset in `public/data/` swaps over.
