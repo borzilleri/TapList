@@ -277,18 +277,6 @@
       </button>
     </div>
   </div>
-  <p class="subtitle">
-    TapList
-    <a
-      class="app-version"
-      href={__APP_RELEASE_URL__}
-      target="_blank"
-      rel="noopener noreferrer"
-      title="View release notes on GitHub"
-    >
-      v{__APP_VERSION__}
-    </a>
-  </p>
   {#await loadPromise then dataset}
     <FreshnessIndicator updatedAt={dataset.updatedAt} />
   {/await}
@@ -334,6 +322,19 @@
     </div>
   {/await}
 </main>
+
+<footer class="app-footer">
+  Powered by TapList
+  <a
+    class="app-version"
+    href={__APP_RELEASE_URL__}
+    target="_blank"
+    rel="noopener noreferrer"
+    title="View release notes on GitHub"
+  >
+    v{__APP_VERSION__}
+  </a>
+</footer>
 
 <PwaBanner {pwa} />
 
@@ -420,10 +421,11 @@
     outline-offset: 1px;
   }
 
-  .subtitle {
-    margin: 0.15rem 0 0.25rem;
+  .app-footer {
+    text-align: center;
+    padding: 1.5rem 0.75rem max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
     color: var(--color-text-muted);
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
   .app-version {
     color: inherit;
