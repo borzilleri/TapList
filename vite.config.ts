@@ -90,6 +90,23 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
+          {
+            // Venue/festival map images. Immutable for the life of a festival,
+            // so CacheFirst — and in their own cache so a ~500 KB map can't
+            // evict the dataset JSON from the small `taplist-data` cache.
+            // Opaque cross-origin responses (status 0) are cacheable so the
+            // festival-floor offline case works.
+            urlPattern: ({ url }) => /\/data\/.+\.(png|jpe?g|webp)$/i.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'taplist-maps',
+              expiration: {
+                maxEntries: 8,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
       devOptions: {

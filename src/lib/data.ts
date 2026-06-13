@@ -143,6 +143,9 @@ export function parseDataset(raw: unknown): Dataset | null {
     id: obj.id,
     festival: typeof obj.festival === 'string' ? obj.festival : null,
     updatedAt: typeof obj.updatedAt === 'string' ? obj.updatedAt : null,
+    // Raw value as authored; re-anchored to an absolute URL in
+    // fetchAndParseDataset (parseDataset has no base URL to resolve against).
+    mapUrl: typeof obj.mapUrl === 'string' && obj.mapUrl.length > 0 ? obj.mapUrl : undefined,
     beers,
   };
 }
@@ -238,6 +241,10 @@ async function fetchAndParseDataset(
   const json: unknown = await res.json();
   const dataset = parseDataset(json);
   if (!dataset) throw new Error('Dataset parse failed (see console warnings)');
+  // Re-anchor a root-relative map path at the data base, the same way the
+  // dataset URL itself is resolved, so the <img> points at the data host
+  // (not the app origin) regardless of where the app is deployed.
+  if (dataset.mapUrl) dataset.mapUrl = resolveDatasetUrl(dataset.mapUrl, baseUrl);
   return dataset;
 }
 
