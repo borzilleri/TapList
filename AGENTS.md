@@ -16,4 +16,3 @@ What the shell does **not** pick up:
 - nvm's `.nvmrc` auto-switch (the `cd`-hook that re-runs `nvm use` based on a project's pinned version) does **not** fire — that's an interactive-shell feature. The PATH baked in at shell start is what each Bash invocation gets.
 
 If a project's `.nvmrc` pins a different version than the user's nvm default, the harness will still use the default. If that ever becomes a problem (e.g., a project pins v18 but our default is v24 and something breaks), only then is a one-off PATH override warranted.
-
