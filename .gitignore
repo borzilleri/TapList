@@ -32,6 +32,7 @@ coverage
 .svelte-kit
 .turbo
 .vite
+.playwright-cli
 
 # Tooling
 .claude/
