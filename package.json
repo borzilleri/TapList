@@ -1,7 +1,7 @@
 {
   "name": "taplist",
   "private": true,
-  "version": "1.2.2",
+  "version": "1.2.3",
   "type": "module",
   "description": "The unofficial guide for the Washington Brewers Festival — a mobile-first, offline-capable PWA.",
   "repository": {
