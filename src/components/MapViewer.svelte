@@ -92,7 +92,7 @@
   @media (min-width: 600px) {
     .panel {
       max-width: 60rem;
-      height: auto;
+      height: 100%;
       max-height: 100%;
       border-radius: var(--radius);
     }
@@ -148,26 +148,41 @@
   }
 
   .body {
-    /* Fills the space under the header. The whole map fits within it (see
-       img rules); scroll/pinch-zoom is available for detail. */
+    /* Mobile: a scroll/pan viewport for the full-size map. `safe center`
+       centers it when it fits but falls back to start-alignment when it
+       overflows, so the top/left edges stay reachable while panning. Desktop
+       switches to a flex line below (the map is contained there). */
     flex: 1;
     min-height: 0;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     padding: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-content: safe center;
   }
   .body img {
-    /* Bound by both dimensions so the full map is visible (contain) at the
-       largest size that fits, rather than overflowing or shrinking to width. */
-    max-width: 100%;
-    max-height: 100%;
+    /* Mobile-first: render at full natural resolution and let the user pan on
+       both axes. Bounded to fit (contain) only at the desktop breakpoint. */
+    display: block;
     width: auto;
     height: auto;
-    object-fit: contain;
-    display: block;
+    max-width: none;
+    max-height: none;
+  }
+  @media (min-width: 600px) {
+    /* The panel has a definite height here, so a flex line gives the image a
+       definite box to resolve `max-height: 100%` against — it fits fully,
+       centered, with no overflow (and thus no scrolling). */
+    .body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .body img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
   }
   .error {
     margin: 1.5rem 0.5rem;
