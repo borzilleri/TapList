@@ -3,6 +3,7 @@
   "id": "taplist-mock-2026",
   "festival": "TapList Mock Festival 2026",
   "updatedAt": "2026-06-10T14:00:00Z",
+  "mapUrl": "/data/taplist-mock-2026-map.png",
   "beers": [
     {
       "id": "mock-0001",

@@ -14,6 +14,7 @@
   import BeerDetail from './components/BeerDetail.svelte';
   import FreshnessIndicator from './components/FreshnessIndicator.svelte';
   import SettingsDrawer from './components/SettingsDrawer.svelte';
+  import MapViewer from './components/MapViewer.svelte';
   import AdhocBeerForm from './components/AdhocBeerForm.svelte';
   import PwaBanner from './components/PwaBanner.svelte';
   import ConfirmDialog from './components/ConfirmDialog.svelte';
@@ -82,8 +83,23 @@
   // Promise so {#await} can drive the loading/error UX.
   let loadPromise = $state(loadAndActivate());
 
+  // Pre-warm the venue map into the service-worker runtime cache as soon as
+  // the dataset resolves, so it's available offline even if the user never
+  // opens the map viewer while online (the festival-floor case). Requesting
+  // it as an Image triggers a normal GET the SW intercepts and caches.
+  $effect(() => {
+    loadPromise
+      .then((dataset) => {
+        if (dataset.mapUrl) new Image().src = dataset.mapUrl;
+      })
+      .catch(() => {
+        /* load errors surface in the main {#await}; nothing to warm. */
+      });
+  });
+
   let selectedBeerId = $state<string | null>(null);
   let settingsOpen = $state(false);
+  let mapOpen = $state(false);
   // null = closed; 'create' = new beer; { id, payload } = editing an existing one.
   let adhocForm = $state<null | 'create' | { id: string; payload: AdhocBeerPayload }>(null);
   // Latest import outcome; shown in the settings drawer until it's reopened.
@@ -257,6 +273,19 @@
       {/await}
     </h1>
     <div class="header-actions">
+      {#await loadPromise then dataset}
+        {#if dataset.mapUrl}
+          <button
+            type="button"
+            class="header-btn"
+            aria-label="Venue map"
+            title="Venue map"
+            onclick={() => (mapOpen = true)}
+          >
+            <span aria-hidden="true">🗺️</span>
+          </button>
+        {/if}
+      {/await}
       <button
         type="button"
         class="header-btn"
@@ -344,6 +373,14 @@
   app root so it's always available and stacks above other modals.
 -->
 <ConfirmDialog />
+
+{#if mapOpen}
+  {#await loadPromise then dataset}
+    {#if dataset.mapUrl}
+      <MapViewer mapUrl={dataset.mapUrl} onClose={() => (mapOpen = false)} />
+    {/if}
+  {/await}
+{/if}
 
 {#if settingsOpen}
   <SettingsDrawer

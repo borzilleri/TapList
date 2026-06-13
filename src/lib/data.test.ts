@@ -157,6 +157,15 @@ describe('parseDataset', () => {
     expect(result!.updatedAt).toBeNull();
   });
 
+  it('captures a string mapUrl and leaves missing/empty as undefined', () => {
+    expect(parseDataset({ id: 'x', mapUrl: '/data/x-map.png', beers: [] })!.mapUrl).toBe(
+      '/data/x-map.png',
+    );
+    expect(parseDataset({ id: 'x', beers: [] })!.mapUrl).toBeUndefined();
+    expect(parseDataset({ id: 'x', mapUrl: '', beers: [] })!.mapUrl).toBeUndefined();
+    expect(parseDataset({ id: 'x', mapUrl: 42, beers: [] })!.mapUrl).toBeUndefined();
+  });
+
   it('drops beers missing required fields', () => {
     const result = parseDataset({
       id: 'x',
@@ -305,6 +314,38 @@ describe('loadActiveDataset', () => {
     });
     const result = await loadActiveDataset(fetchImpl, null, '/TapList/');
     expect(result.dataset.id).toBe('a');
+  });
+
+  it('re-anchors a root-relative mapUrl at the data base', async () => {
+    const fetchImpl = makeFetch({
+      'https://data.example/taplist/data/catalog.json': {
+        version: 1,
+        datasets: [{ id: 'm', name: 'M', url: '/data/m.json', default: true }],
+      },
+      'https://data.example/taplist/data/m.json': {
+        id: 'm',
+        mapUrl: '/data/m-map.png',
+        beers: [],
+      },
+    });
+    const result = await loadActiveDataset(fetchImpl, null, 'https://data.example/taplist');
+    expect(result.dataset.mapUrl).toBe('https://data.example/taplist/data/m-map.png');
+  });
+
+  it('passes an absolute mapUrl through unchanged', async () => {
+    const fetchImpl = makeFetch({
+      '/data/catalog.json': {
+        version: 1,
+        datasets: [{ id: 'm', name: 'M', url: '/data/m.json', default: true }],
+      },
+      '/data/m.json': {
+        id: 'm',
+        mapUrl: 'https://cdn.example/m-map.png',
+        beers: [],
+      },
+    });
+    const result = await loadActiveDataset(fetchImpl, null, '/');
+    expect(result.dataset.mapUrl).toBe('https://cdn.example/m-map.png');
   });
 
   it('passes absolute URLs through unchanged', async () => {

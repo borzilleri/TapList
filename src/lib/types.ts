@@ -84,6 +84,12 @@ export interface Dataset {
   id: string;
   festival: string | null;
   updatedAt: string | null;
+  /**
+   * Optional venue/festival map image. Resolved to an absolute URL at load
+   * time (see resolveDatasetUrl in data.ts). Undefined when the dataset
+   * doesn't ship a map. Surfaced via the header map button.
+   */
+  mapUrl?: string;
   beers: Beer[];
 }
 
