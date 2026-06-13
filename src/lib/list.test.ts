@@ -4,7 +4,13 @@
 
 import { describe, expect, it } from 'vitest';
 import type { Beer, BeerUserState, UserData } from './types';
-import { buildRows, mergeBeers, styleCategoryFacets, type BuildRowsOptions } from './list';
+import {
+  buildRows,
+  filterModeFacets,
+  mergeBeers,
+  styleCategoryFacets,
+  type BuildRowsOptions,
+} from './list';
 import { emptyUserData } from './storage';
 
 function beer(overrides: Partial<Beer> = {}): Beer {
@@ -473,5 +479,42 @@ describe('styleCategoryFacets', () => {
       styleCategoryFacets(beers, data, { search: '', filter: 'all', showNotPresent: true }),
     );
     expect(shown['IPA']).toBe(2);
+  });
+});
+
+describe('filterModeFacets', () => {
+  const beers = [
+    beer({ id: 'a', name: 'Hazy One', styleCategory: 'IPA' }),
+    beer({ id: 'b', name: 'Crisp One', styleCategory: 'Lager & Pilsner' }),
+    beer({ id: 'c', name: 'Dark One', styleCategory: 'IPA' }),
+  ];
+
+  it('partitions statuses, with all as the total and notTried covering untracked + toTry', () => {
+    const data = userData({ a: { status: 'tried' }, b: { status: 'toTry' } });
+    const counts = filterModeFacets(beers, data, { search: '' });
+    expect(counts.all).toBe(3);
+    expect(counts.tried).toBe(1);
+    expect(counts.toTry).toBe(1);
+    expect(counts.notTried).toBe(2); // untracked 'c' + toTry 'b'
+  });
+
+  it('respects search', () => {
+    const counts = filterModeFacets(beers, emptyUserData(), { search: 'hazy' });
+    expect(counts.all).toBe(1);
+    expect(counts.notTried).toBe(1);
+  });
+
+  it('respects the style filter', () => {
+    const counts = filterModeFacets(beers, emptyUserData(), {
+      search: '',
+      styleCategory: 'IPA',
+    });
+    expect(counts.all).toBe(2);
+  });
+
+  it('respects not-present hiding', () => {
+    const data = userData({ c: { notPresent: true } });
+    expect(filterModeFacets(beers, data, { search: '', showNotPresent: false }).all).toBe(2);
+    expect(filterModeFacets(beers, data, { search: '', showNotPresent: true }).all).toBe(3);
   });
 });
