@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Beer, FilterMode, SortDirection, SortKey, StyleCategory } from '../lib/types';
   import type { UserStore } from '../lib/userStore.svelte';
-  import { buildRows, mergeBeers, styleCategoryFacets } from '../lib/list';
+  import { buildRows, filterModeFacets, mergeBeers, styleCategoryFacets } from '../lib/list';
   import BeerRow from './BeerRow.svelte';
 
   interface Props {
@@ -52,6 +52,13 @@
     styleCategoryFacets(combined, store.all, { search, filter, showNotPresent }).filter(
       (f) => f.count > 0 || f.category === styleCategory,
     ),
+  );
+
+  // Counts for the status filter chips: each reflects search + style +
+  // not-present, but NOT the status filter itself, so a chip shows what
+  // selecting it would yield.
+  const filterCounts = $derived(
+    filterModeFacets(combined, store.all, { search, styleCategory, showNotPresent }),
   );
 
   function onToggleToTry(beerId: string) {
@@ -173,7 +180,10 @@
               checked={filter === opt.value}
               onchange={() => (filter = opt.value as FilterMode)}
             />
-            <span>{opt.label}</span>
+            <span
+              >{opt.label}
+              <span class="chip-count">{filterCounts[opt.value as FilterMode]}</span></span
+            >
           </label>
         {/each}
       </div>

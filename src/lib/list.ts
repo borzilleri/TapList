@@ -138,6 +138,34 @@ export function styleCategoryFacets(
   return STYLE_CATEGORIES.map((category) => ({ category, count: counts.get(category) ?? 0 }));
 }
 
+/**
+ * Faceted counts for the status filter chips. Applies not-present hiding,
+ * search, and the style filter — but NOT the status filter itself — so each
+ * chip's count reflects what selecting it would yield. The four modes are not
+ * disjoint: `all` counts everything, and `notTried` includes untracked beers
+ * plus those in `toTry`.
+ */
+export function filterModeFacets(
+  beers: Beer[],
+  userData: UserData,
+  options: Pick<BuildRowsOptions, 'search' | 'styleCategory' | 'showNotPresent'>,
+): Record<FilterMode, number> {
+  const { search, styleCategory = null, showNotPresent = false } = options;
+  const q = search.trim().toLowerCase();
+  const counts: Record<FilterMode, number> = { all: 0, toTry: 0, tried: 0, notTried: 0 };
+  for (const b of beers) {
+    const state = stateFor(userData, b.id);
+    if (!showNotPresent && state.notPresent) continue;
+    if (!matchesSearch(b, q)) continue;
+    if (!matchesStyleCategory(b, styleCategory)) continue;
+    counts.all += 1;
+    if (state.status === 'toTry') counts.toTry += 1;
+    if (state.status === 'tried') counts.tried += 1;
+    if (state.status !== 'tried') counts.notTried += 1;
+  }
+  return counts;
+}
+
 function stateFor(userData: UserData, beerId: string): BeerUserState {
   return userData.beers[beerId] ?? EMPTY_BEER_USER_STATE;
 }
